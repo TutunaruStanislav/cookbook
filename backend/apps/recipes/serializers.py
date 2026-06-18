@@ -63,9 +63,15 @@ class RecipeListSerializer(serializers.ModelSerializer):
     author = AuthorSerializer(read_only=True)
     categories = CategorySerializer(many=True, read_only=True)
     tags = TagSerializer(many=True, read_only=True)
+    photo = serializers.SerializerMethodField()
     avg_rating = serializers.SerializerMethodField()
     ratings_count = serializers.SerializerMethodField()
     is_favorited = serializers.SerializerMethodField()
+
+    def get_photo(self, obj):
+        # Relative URL so it resolves against the current origin (works on any
+        # port / host); the host-based absolute URL breaks behind a proxy.
+        return obj.photo.url if obj.photo else None
 
     def get_avg_rating(self, obj):
         return getattr(obj, 'avg_rating', None)
@@ -92,9 +98,13 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
     steps = RecipeStepSerializer(many=True, read_only=True)
     ingredients = serializers.SerializerMethodField()
+    photo = serializers.SerializerMethodField()
     avg_rating = serializers.SerializerMethodField()
     ratings_count = serializers.SerializerMethodField()
     is_favorited = serializers.SerializerMethodField()
+
+    def get_photo(self, obj):
+        return obj.photo.url if obj.photo else None
 
     def get_avg_rating(self, obj):
         return getattr(obj, 'avg_rating', None)

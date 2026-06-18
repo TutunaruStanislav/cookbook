@@ -4,12 +4,18 @@ Run: python manage.py seed
 """
 import io
 from datetime import date, timedelta
+from pathlib import Path
 
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 from PIL import Image, ImageDraw
+
+# Real food photos (free-licensed, sourced from Wikimedia Commons), one per
+# recipe, named recipe_NN.<ext> in the SAME order as RECIPES_DATA below.
+# Falls back to a generated placeholder if a file is missing.
+SEED_IMAGES_DIR = Path(__file__).resolve().parents[2] / 'seed_images'
 
 # ── Palette for placeholder photos ───────────────────────────────────────────
 _COLORS = [
@@ -779,6 +785,30 @@ class Command(BaseCommand):
         buf.seek(0)
         return buf.read()
 
+    def _seed_image(self, index):
+        """Return (filename, bytes) for a recipe's photo.
+
+        Prefers a real photo seed_images/recipe_NN.<ext>; falls back to a
+        generated coloured placeholder when the file is absent.
+        """
+        if SEED_IMAGES_DIR.is_dir():
+            for path in sorted(SEED_IMAGES_DIR.glob(f'recipe_{index:02d}.*')):
+                return path.name, path.read_bytes()
+        return f'placeholder_{index:02d}.jpg', self._make_placeholder(index)
+
+    def _assign_photo(self, recipe, index):
+        """Set the recipe photo, refreshing old generated placeholders.
+
+        Idempotent: once a real photo is attached, re-runs skip it.
+        """
+        if recipe.photo and 'placeholder' not in recipe.photo.name:
+            return
+        old_name = recipe.photo.name if recipe.photo else None
+        filename, data = self._seed_image(index)
+        recipe.photo.save(filename, ContentFile(data), save=True)
+        if old_name and old_name != recipe.photo.name and 'placeholder' in old_name:
+            recipe.photo.storage.delete(old_name)
+
     # ── creators ─────────────────────────────────────────────────────────────
 
     def _create_users(self):
@@ -864,12 +894,9 @@ class Command(BaseCommand):
                     RecipeStep.objects.get_or_create(
                         recipe=recipe, order=order, defaults={'text': text}
                     )
-                # placeholder photo
-                photo_bytes = self._make_placeholder(idx)
-                filename = f'placeholder_{idx:02d}.jpg'
-                recipe.photo.save(
-                    filename, ContentFile(photo_bytes), save=True
-                )
+            # photo: real image if available, else placeholder. Also refreshes
+            # recipes that still carry an old generated placeholder.
+            self._assign_photo(recipe, idx)
             recipes[data['title']] = recipe
 
         self.stdout.write(f'  Recipes: {len(recipes)}')
