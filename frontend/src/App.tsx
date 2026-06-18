@@ -8,6 +8,8 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import NotFoundPage from './pages/NotFoundPage';
 import PlannerPage from './pages/PlannerPage';
+import RecipeDetailPage from './pages/RecipeDetailPage';
+import RecipeFormPage from './pages/RecipeFormPage';
 import RecipesPage from './pages/RecipesPage';
 import RegisterPage from './pages/RegisterPage';
 
@@ -30,7 +32,27 @@ export default function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
-              <Route path="/recipes/*" element={<RecipesPage />} />
+
+              {/* Recipes — order matters: /new before /:id */}
+              <Route path="/recipes" element={<RecipesPage />} />
+              <Route
+                path="/recipes/new"
+                element={
+                  <ProtectedRoute>
+                    <RecipeFormPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/recipes/:id" element={<RecipeDetailPage />} />
+              <Route
+                path="/recipes/:id/edit"
+                element={
+                  <ProtectedRoute>
+                    <RecipeFormPage />
+                  </ProtectedRoute>
+                }
+              />
+
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route
                 path="/planner"

@@ -302,3 +302,37 @@ react-beautiful-dnd), Recharts, drf-spectacular, pytest, Vitest+RTL, ruff/ESLint
 
 ### Следующий шаг
 - Фаза 11: frontend рецепты — список с поиском/фильтрами/пагинацией, карточка, детальная страница, CRUD-формы.
+
+---
+
+## 2026-06-18 — Фаза 11: frontend — рецепты (CRUD, поиск, детали, масштабирование)
+
+### Что сделано
+**Хуки (`src/hooks/useRecipes.ts`):** useRecipes, useRecipe, useCategories, useTags, useIngredients (enabled при >=2 символах), useFavoriteToggle, useCreateRecipe, useUpdateRecipe, useDeleteRecipe.
+
+**Компоненты:**
+- `StarRating.tsx` — статичный display 1–5 звёзд с optional counter.
+- `RecipeCard.tsx` — фото (placeholder если нет), имя автора (first_name + last_name / username), difficulty badge, категории, StarRating, кнопка избранного (только auth).
+- `RecipeFiltersBar.tsx` — debounced search (400 мс), difficulty/category/ordering selects, "Моё" switch, кнопка сброса; фильтры через URL search params.
+- `AppPagination.tsx` — Bootstrap pagination с умным диапазоном (макс 7 элементов, ellipsis).
+
+**Страницы:**
+- `RecipesPage.tsx` — полная реализация (заменён placeholder): фильтры из URLSearchParams, grid 1/2/3 колонки, пагинация, кнопка "+ Новый рецепт" для авторизованных, состояния loading/error/empty.
+- `RecipeDetailPage.tsx` — фото, meta-list (автор, сложность, время, рейтинг, приватность), категории и теги, кнопки избранного/edit/delete (для автора), servings control (+/-/сброс) со scaling через `?servings=N`, таблица ингредиентов с `scaled_amount`, нумерованный список шагов, confirm перед удалением.
+- `RecipeFormPage.tsx` — create+edit в одном компоненте (определяется по `:id` param), react-hook-form + zod (включая coerce для числовых полей), `useFieldArray` для ингредиентов и шагов, `IngredientSearch` inline combobox (useIngredients + dropdown), toggle-badges для категорий и тегов, предзаполнение формы при edit через `reset()`.
+
+**App.tsx:** маршруты `/recipes`, `/recipes/new`, `/recipes/:id`, `/recipes/:id/edit`, /new и /edit защищены ProtectedRoute. Literal `/recipes/new` стоит перед `/:id` — React Router v6 матчит по специфичности.
+
+### Принятые решения
+- **Фильтры в URL** — сохраняются при навигации, работает кнопка «назад».
+- **`servings` в query key** — каждое значение кэшируется отдельно; при смене порций новый fetch, предыдущий ответ в кэше не перезаписывается.
+- **Избранное в фазе 11** — включено, т.к. это одна мутация и напрямую влияет на список/детальную страницу.
+- **IngredientSearch** — useIngredients с `enabled: q.length >= 2`, results в абсолютно позиционированном ListGroup (z-index 1050), закрывается при клике вне.
+- **`react-hook-form` + `useFieldArray`** — стандартная связка для динамических списков без ручного управления состоянием.
+
+### Проблемы и решения
+- `Recipe.photo` — относительный путь из Django, Vite proxied `/media` → `http://localhost:8000`, поэтому `src={recipe.photo}` работает в dev без изменений.
+- Загрузка фото (upload) — намеренно пропущена в Phase 11 (требует `multipart/form-data`). Существующие фото при edit сохраняются (PATCH не перезаписывает поле если не передано).
+
+### Следующий шаг
+- Фаза 12: frontend социальные функции — интерактивный рейтинг (звёзды), комментарии (список + форма + удаление).
