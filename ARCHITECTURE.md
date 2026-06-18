@@ -79,24 +79,24 @@ React + PostgreSQL.
 - [x] Поиск и фильтрация по ключевым полям — backend: SearchFilter + django-filter + ingredient search (Phase 2–3)
 - [x] Дашборд с визуализацией — /api/dashboard/stats/ (totals, by_category, by_difficulty, cooking_time, top ratings/favorites, top tags) (Phase 7)
 - [x] Пагинация списков — PageNumberPagination (PAGE_SIZE=12, Phase 1)
-- [ ] Адаптивная вёрстка (desktop + mobile)
+- [x] Адаптивная вёрстка (desktop + mobile) — Bootstrap grid, responsive Navbar (Phase 10–14)
 
 ### Нефункциональные
 - [x] Seed-данные (реалистичный демо-набор) — 28 рецептов, 64 ингредиента, план меню (Phase 8)
 - [x] REST API + живая OpenAPI/Swagger страница — `/api/docs/` (drf-spectacular 0.29)
 - [x] ≥ 10 unit/integration тестов — 45 pytest-тестов (5 файлов, Phase 9)
 - [x] CI (GitHub Actions): lint + тесты — `.github/workflows/ci.yml` (backend: ruff+pytest, frontend: tsc+vitest, Phase 17)
-- [ ] Запуск одной командой `docker compose up`
-- [ ] README.md с инструкцией
+- [x] Запуск одной командой `docker compose up` — Phase 16
+- [x] README.md с инструкцией — быстрый старт, демо-аккаунты, env, тесты, структура (Phase 18)
 - [x] ARCHITECTURE.md (этот файл)
 - [x] REPORT.md (ведётся по мере работы)
 - [x] Адекватная история коммитов (не всё разом)
 
 ### Вариант 3 — функциональные
-- [ ] Рецепты: название, описание, время, сложность, фото (upload), пошаговые инструкции
-- [ ] Ингредиенты: количество + единицы (граммы, штуки, мл)
-- [ ] Категории и теги
-- [ ] Поиск по названию, ингредиентам («что приготовить из курицы и риса»), тегам
+- [x] Рецепты: название, описание, время, сложность, фото (upload), пошаговые инструкции — Phase 2, 11
+- [x] Ингредиенты: количество + единицы (граммы, штуки, мл) — Phase 2, 11
+- [x] Категории и теги — Phase 2, 11
+- [x] Поиск по названию, ингредиентам («что приготовить из курицы и риса»), тегам — Phase 2–3, 11
 - [x] Планировщик меню на неделю — MenuPlan/MealSlot, auto-create 21 slots, PATCH slot (Phase 6)
 - [x] Автогенерация списка покупок — агрегация с учётом кратности рецептов (Phase 6)
 - [x] Масштабирование порций — ?servings=N на /api/recipes/{id}/, Decimal ROUND_HALF_UP (Phase 2)
@@ -526,3 +526,4 @@ cookbook/
 | 2026-06-18 | Фаза 15 завершена: 21 frontend-тест (Vitest + RTL) — StarRating (5), AppPagination (5), RecipeCard (6), HomePage (5). Инфраструктура: test/utils.tsx (кастомный render с QueryClient+MemoryRouter+AuthProvider), test/fixtures.ts (mockRecipe). Auth-тесты через localStorage pre-population. |
 | 2026-06-18 | Фаза 16 завершена: Dockerization — backend/Dockerfile (python:3.12-slim), entrypoint.sh (migrate→seed→collectstatic→gunicorn с exec), frontend/Dockerfile (node:20 build → nginx:1.27 serve, двухэтапная сборка), frontend/nginx.conf (proxy /api/+/static/ → backend, alias /media/ → shared volume, SPA fallback), docker-compose.yml (db+backend+frontend, healthcheck pg_isready, volumes postgres_data+media_files), whitenoise добавлен в requirements+settings. |
 | 2026-06-18 | Фаза 17 завершена: `.github/workflows/ci.yml` — два параллельных job-а. `backend`: postgres:16 service container, Python 3.12, pip cache, ruff check, pytest (coverage из pyproject.toml). `frontend`: Node 20, npm cache, npx tsc (type-check), npm test (vitest run). Триггеры: push + pull_request на master. |
+| 2026-06-18 | Фаза 18 завершена: `README.md` — быстрый старт (docker compose up --build), демо-аккаунты (alice/bob), функциональность, локальная разработка, тесты, переменные окружения, структура репозитория, CI. Чек-лист требований закрыт полностью. |
