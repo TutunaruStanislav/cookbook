@@ -85,7 +85,7 @@ React + PostgreSQL.
 - [x] Seed-данные (реалистичный демо-набор) — 28 рецептов, 64 ингредиента, план меню (Phase 8)
 - [x] REST API + живая OpenAPI/Swagger страница — `/api/docs/` (drf-spectacular 0.29)
 - [x] ≥ 10 unit/integration тестов — 45 pytest-тестов (5 файлов, Phase 9)
-- [ ] CI (GitHub Actions): lint + тесты; Docker-образ — опционально
+- [x] CI (GitHub Actions): lint + тесты — `.github/workflows/ci.yml` (backend: ruff+pytest, frontend: tsc+vitest, Phase 17)
 - [ ] Запуск одной командой `docker compose up`
 - [ ] README.md с инструкцией
 - [x] ARCHITECTURE.md (этот файл)
@@ -525,3 +525,4 @@ cookbook/
 | 2026-06-18 | Фаза 14 завершена: frontend дашборд — useDashboard.ts (staleTime 5 мин), DashboardPage: 4 StatCard (totals), BarChart по категориям (angle=-35), PieChart по сложности (donut, DIFF_COLORS), BarChart по времени (layout=vertical), badge-облако топ тегов, топ-5 по рейтингу (StarRating), топ-5 по избранному. Recharts ResponsiveContainer. |
 | 2026-06-18 | Фаза 15 завершена: 21 frontend-тест (Vitest + RTL) — StarRating (5), AppPagination (5), RecipeCard (6), HomePage (5). Инфраструктура: test/utils.tsx (кастомный render с QueryClient+MemoryRouter+AuthProvider), test/fixtures.ts (mockRecipe). Auth-тесты через localStorage pre-population. |
 | 2026-06-18 | Фаза 16 завершена: Dockerization — backend/Dockerfile (python:3.12-slim), entrypoint.sh (migrate→seed→collectstatic→gunicorn с exec), frontend/Dockerfile (node:20 build → nginx:1.27 serve, двухэтапная сборка), frontend/nginx.conf (proxy /api/+/static/ → backend, alias /media/ → shared volume, SPA fallback), docker-compose.yml (db+backend+frontend, healthcheck pg_isready, volumes postgres_data+media_files), whitenoise добавлен в requirements+settings. |
+| 2026-06-18 | Фаза 17 завершена: `.github/workflows/ci.yml` — два параллельных job-а. `backend`: postgres:16 service container, Python 3.12, pip cache, ruff check, pytest (coverage из pyproject.toml). `frontend`: Node 20, npm cache, npx tsc (type-check), npm test (vitest run). Триггеры: push + pull_request на master. |

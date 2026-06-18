@@ -521,3 +521,40 @@ react-beautiful-dnd), Recharts, drf-spectacular, pytest, Vitest+RTL, ruff/ESLint
 
 ### Следующий шаг
 - Фаза 17: CI/GitHub Actions (lint + test backend на push).
+
+---
+
+## 2026-06-18 — Фаза 17: CI/GitHub Actions
+
+### Что сделано
+Создан `.github/workflows/ci.yml` — два параллельных job-а:
+
+**Job `backend`** (`ubuntu-latest`):
+- PostgreSQL 16 service container (`postgres:16-alpine`) с healthcheck `--health-cmd pg_isready`.
+- `actions/setup-python@v5` (Python 3.12, кэш pip по `requirements*.txt`).
+- `pip install -r requirements.txt -r requirements-dev.txt`.
+- `ruff check .` — линт.
+- `pytest --tb=short -q` — тесты + coverage (флаги из `pyproject.toml` addopts: `--cov=apps --cov-report=term-missing`).
+- Переменные окружения: `POSTGRES_*`, `SECRET_KEY`, `DEBUG=True` — задаются на уровне job.
+
+**Job `frontend`** (`ubuntu-latest`):
+- `actions/setup-node@v4` (Node 20, кэш npm по `frontend/package-lock.json`).
+- `npm ci`.
+- `npx tsc` — type-check (tsconfig.json уже имеет `"noEmit": true`).
+- `npm test` — запускает `vitest run`.
+
+Оба job-а используют `defaults.run.working-directory` для корректного рабочего каталога.
+Кэш pip/npm ускоряет повторные запуски CI.
+
+### Принятые решения
+- **Два отдельных job-а** (не steps в одном) — backend и frontend могут выполняться параллельно, быстрее общий pipeline.
+- **`cache-dependency-path` с glob `requirements*.txt`** — захватывает и `requirements.txt`, и `requirements-dev.txt`; при изменении любого файла кэш pip инвалидируется.
+- **`postgres:16-alpine` в service container** — нет необходимости в `docker-compose` для тестов; стандартная практика GitHub Actions для тестов с БД.
+- **Env vars на уровне job, не step** — все шаги `backend`-job имеют доступ к `POSTGRES_*` и `SECRET_KEY` без дублирования.
+- **`npx tsc` (без флагов)** — `tsconfig.json` уже имеет `"noEmit": true`, поэтому тайп-чек не создаёт файлы, а просто проверяет типы.
+
+### Проблемы и решения
+- Нет.
+
+### Следующий шаг
+- Фаза 18: README.md + финальная полировка.
