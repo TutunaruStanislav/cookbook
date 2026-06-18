@@ -47,7 +47,7 @@ React + PostgreSQL.
 - **Python 3.12**, **Django 5.x**, **Django REST Framework**
 - **PostgreSQL 16** (через `psycopg`)
 - **djangorestframework-simplejwt** — JWT-аутентификация
-- **drf-spectacular** — OpenAPI 3 схема + Swagger UI / ReDoc
+- **drf-spectacular 0.29+** — OpenAPI 3 схема + Swagger UI (`SpectacularSwaggerView`) / ReDoc
 - **django-filter** — фильтрация списков
 - **Pillow** — обработка загружаемых изображений
 - **pytest, pytest-django, pytest-cov, factory_boy / Faker** — тесты и фабрики данных
