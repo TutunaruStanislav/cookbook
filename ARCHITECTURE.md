@@ -97,9 +97,9 @@ React + PostgreSQL.
 - [ ] Ингредиенты: количество + единицы (граммы, штуки, мл)
 - [ ] Категории и теги
 - [ ] Поиск по названию, ингредиентам («что приготовить из курицы и риса»), тегам
-- [ ] Планировщик меню на неделю (drag-and-drop: пн–вс × завтрак/обед/ужин)
-- [ ] Автогенерация списка покупок (агрегация + суммирование ингредиентов)
-- [ ] Масштабирование порций (пересчёт на N порций)
+- [x] Планировщик меню на неделю — MenuPlan/MealSlot, auto-create 21 slots, PATCH slot (Phase 6)
+- [x] Автогенерация списка покупок — агрегация с учётом кратности рецептов (Phase 6)
+- [x] Масштабирование порций — ?servings=N на /api/recipes/{id}/, Decimal ROUND_HALF_UP (Phase 2)
 - [x] Избранное (закладки) — toggle endpoint, фильтр ?favorites=true (Phase 5)
 - [x] Рейтинг 1–5 звёзд + сортировка по среднему — upsert, avg_rating аннотация, ?ordering=avg_rating (Phase 5)
 - [x] Регистрация/авторизация (JWT) — register/login/refresh/me (Phase 4); 2 предзаполненных пользователя — Phase 8 (seed); публичные/приватные рецепты — Phase 2; имя автора на карточке — Phase 2
@@ -514,3 +514,4 @@ cookbook/
 | 2026-06-18 | Фаза 2 завершена: модели рецептов, миграция, сериализаторы (list/detail/write), ViewSets, права, поиск по ингредиентам, масштабирование порций. Миграция написана вручную (нет локального PostgreSQL). |
 | 2026-06-18 | Фазы 3+4 завершены: поиск/фильтры подтверждены (были готовы в Phase 2). Auth: register/login/refresh/me, кастомный LoginView возвращает user в ответе. |
 | 2026-06-18 | Фаза 5 завершена: Favorite (toggle), Rating (upsert, avg), Comment (CanDeleteComment). is_favorited/ratings_count через Exists-аннотацию в queryset. |
+| 2026-06-18 | Фаза 6 завершена: MenuPlan/MealSlot, auto-create slots, shopping list с учётом кратности рецептов. |
