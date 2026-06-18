@@ -25,10 +25,10 @@ docker compose up --build
 
 | Адрес | Что |
 |---|---|
-| http://localhost | Фронтенд (React) |
-| http://localhost/api/ | REST API |
-| http://localhost/api/docs/ | Swagger UI (интерактивная документация) |
-| http://localhost/api/redoc/ | ReDoc |
+| http://localhost:8888 | Фронтенд (React) |
+| http://localhost:8888/api/ | REST API |
+| http://localhost:8888/api/docs/ | Swagger UI (интерактивная документация) |
+| http://localhost:8888/api/redoc/ | ReDoc |
 
 > Первый запуск занимает ~1–2 минуты: `db` стартует с healthcheck, затем backend запускает миграции и seed-данные.
 
@@ -86,7 +86,7 @@ python manage.py migrate
 python manage.py seed
 
 # Запуск сервера
-python manage.py runserver        # http://localhost:8000
+python manage.py runserver        # http://localhost:8888:8000
 ```
 
 ### Frontend
@@ -95,10 +95,10 @@ python manage.py runserver        # http://localhost:8000
 cd frontend
 
 npm install
-npm run dev                       # http://localhost:5173
+npm run dev                       # http://localhost:8888:5173
 ```
 
-Vite автоматически проксирует `/api` и `/media` на `http://localhost:8000`.
+Vite автоматически проксирует `/api` и `/media` на `http://localhost:8888:8000`.
 
 ---
 
@@ -139,8 +139,8 @@ npm test
 | `POSTGRES_PASSWORD` | `cookbook` | Пароль БД |
 | `POSTGRES_HOST` | `localhost` | Хост БД (`db` в Docker) |
 | `POSTGRES_PORT` | `5432` | Порт БД |
-| `CORS_ALLOWED_ORIGINS` | `http://localhost:5173,...` | CORS для фронтенда |
-| `PORT` | `80` | Внешний порт Docker (nginx) |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:8888:5173,...` | CORS для фронтенда |
+| `PORT` | `8888` | Внешний порт Docker (nginx) |
 
 > В production обязательно задать `SECRET_KEY`, `DEBUG=False`, `ALLOWED_HOSTS` и `CORS_ALLOWED_ORIGINS`.
 
