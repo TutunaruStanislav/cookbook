@@ -50,9 +50,9 @@ export default function AppNavbar() {
                 <Nav.Link as={NavLink} to="/login">
                   Войти
                 </Nav.Link>
-                <Button variant="primary" size="sm" as={Link as React.ElementType} to="/register">
+                <Link to="/register" className="btn btn-primary btn-sm">
                   Регистрация
-                </Button>
+                </Link>
               </>
             )}
           </Nav>

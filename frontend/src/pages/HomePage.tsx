@@ -1,4 +1,4 @@
-import { Button, Card, Col, Container, Row } from 'react-bootstrap';
+import { Card, Col, Container, Row } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -37,13 +37,13 @@ export default function HomePage() {
             Создавайте, ищите и планируйте любимые блюда. Генерируйте список покупок одним кликом.
           </p>
           <div className="d-flex gap-3 justify-content-center flex-wrap">
-            <Button variant="primary" size="lg" as={Link as React.ElementType} to="/recipes">
+            <Link to="/recipes" className="btn btn-primary btn-lg">
               Смотреть рецепты
-            </Button>
+            </Link>
             {!isAuthenticated && (
-              <Button variant="outline-light" size="lg" as={Link as React.ElementType} to="/register">
+              <Link to="/register" className="btn btn-outline-light btn-lg">
                 Создать аккаунт
-              </Button>
+              </Link>
             )}
           </div>
         </Container>
@@ -59,13 +59,13 @@ export default function HomePage() {
                   <Card.Title className="fw-semibold mb-2">{f.title}</Card.Title>
                   <Card.Text className="text-muted flex-grow-1">{f.text}</Card.Text>
                   {f.requiresAuth && !isAuthenticated ? (
-                    <Button variant="outline-secondary" as={Link as React.ElementType} to="/login">
+                    <Link to="/login" className="btn btn-outline-secondary">
                       Войти для доступа
-                    </Button>
+                    </Link>
                   ) : (
-                    <Button variant="outline-primary" as={Link as React.ElementType} to={f.link}>
+                    <Link to={f.link} className="btn btn-outline-primary">
                       {f.label}
-                    </Button>
+                    </Link>
                   )}
                 </Card.Body>
               </Card>

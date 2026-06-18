@@ -49,9 +49,9 @@ export default function RecipesPage() {
       <div className="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
         <h4 className="mb-0 fw-semibold">Рецепты</h4>
         {isAuthenticated && (
-          <Button as={Link as React.ElementType} to="/recipes/new" variant="primary" size="sm">
+          <Link to="/recipes/new" className="btn btn-primary btn-sm">
             + Новый рецепт
-          </Button>
+          </Link>
         )}
       </div>
 

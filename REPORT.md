@@ -586,3 +586,24 @@ react-beautiful-dnd), Recharts, drf-spectacular, pytest, Vitest+RTL, ruff/ESLint
 - ✅ Docker: `docker compose up` — три сервиса, одна команда
 - ✅ CI: GitHub Actions — lint + тесты на каждый push
 - ✅ Документация: ARCHITECTURE.md + REPORT.md + README.md
+
+---
+
+## 2026-06-18 — Финальная проверка: первая реальная сборка фронтенда
+
+### Что сделано
+Запуск `docker compose up --build -d` (флаг `-d` добавлен в README) выявил три проблемы — это был **первый реальный запуск компиляции фронтенда** (раньше `tsc` был прописан только в CI, но не выполнялся). Все исправлены, приложение поднимается и отвечает на порту 8888.
+
+### Проблемы и решения
+1. **Отсутствовал `frontend/package-lock.json`** — `npm ci` (в Dockerfile и CI) без lock-файла падает. Сгенерирован через `npm install` и закоммичен.
+2. **Тест-файлы не видели vitest-глобалы** (`describe`/`it`/`expect`/`vi`) при `tsc` — `npm run build` (`tsc && vite build`) проверяет типы во всём `src`, включая `*.test.tsx`. Добавлен `"types": ["vitest/globals", "@testing-library/jest-dom"]` в `tsconfig.json`.
+3. **`<Button as={Link as React.ElementType}>`** — каст конфликтовал с полиморфным типом `as` у react-bootstrap `Button` (9 мест: HomePage, NotFoundPage, RecipesPage, RecipeDetailPage, AppNavbar). Заменено на идиоматичный `<Link className="btn btn-...">` — рендерится идентично, типобезопасно, без полиморфизма.
+
+### Проверка
+- `npx tsc` — 0 ошибок.
+- `npm test` — все 21 тест проходят (замены `Button`→`Link` не сломали тесты: они используют `getByText`, не `getByRole('button')`).
+- `docker compose up --build -d` — образы собираются, контейнеры здоровы.
+- Через nginx на 8888: `/` → 200, `/api/health/` → `{"status": "ok"}`, `/api/recipes/` → 28 публичных рецептов. Backend: миграции + seed (29 рецептов, 2 юзера, план меню) + collectstatic + gunicorn.
+
+### Вывод
+CI с самого начала прогнал бы `tsc`/`npm ci` и поймал бы эти ошибки — но локальная сборка обнаружила их раньше. Урок: type-check (`npm run build`) нужно гонять локально до коммита, не полагаясь только на CI.

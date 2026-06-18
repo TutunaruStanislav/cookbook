@@ -41,9 +41,9 @@ export default function RecipeDetailPage() {
     return (
       <Container className="py-5">
         <Alert variant="danger">Рецепт не найден или недоступен.</Alert>
-        <Button variant="outline-secondary" as={Link as React.ElementType} to="/recipes">
+        <Link to="/recipes" className="btn btn-outline-secondary">
           К списку рецептов
-        </Button>
+        </Link>
       </Container>
     );
   }
@@ -147,14 +147,12 @@ export default function RecipeDetailPage() {
             )}
             {isAuthor && (
               <>
-                <Button
-                  as={Link as React.ElementType}
+                <Link
                   to={`/recipes/${recipe.id}/edit`}
-                  variant="outline-secondary"
-                  size="sm"
+                  className="btn btn-outline-secondary btn-sm"
                 >
                   Редактировать
-                </Button>
+                </Link>
                 <Button
                   variant="outline-danger"
                   size="sm"
