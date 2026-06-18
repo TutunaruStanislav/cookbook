@@ -1,5 +1,7 @@
 # Кулинарная книга рецептов
 
+[![CI](https://github.com/TutunaruStanislav/cookbook/actions/workflows/ci.yml/badge.svg)](https://github.com/TutunaruStanislav/cookbook/actions/workflows/ci.yml)
+
 Full-stack веб-приложение для хранения, поиска и планирования рецептов. Пользователи создают и оценивают рецепты, планируют меню на неделю с drag-and-drop и получают автоматически сформированный список покупок.
 
 **Стек:** Django 5 + DRF + PostgreSQL 16 · React 18 + TypeScript + Vite · Bootstrap 5 · Docker
@@ -9,7 +11,7 @@ Full-stack веб-приложение для хранения, поиска и 
 ## Быстрый старт (Docker)
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/TutunaruStanislav/cookbook.git
 cd cookbook
 
 # Скопируйте и при необходимости отредактируйте переменные окружения
