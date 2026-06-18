@@ -233,7 +233,8 @@ MenuPlan
 | POST | `/api/auth/register/` | регистрация |
 | POST | `/api/auth/login/` | получить access/refresh токены |
 | POST | `/api/auth/refresh/` | обновить access-токен |
-| GET | `/api/auth/me/` | текущий пользователь |
+| GET/PATCH | `/api/auth/me/` | текущий пользователь (PATCH — смена отображаемого имени) |
+| POST | `/api/auth/change-password/` | смена пароля (нужен текущий пароль) |
 
 ### Рецепты
 | Метод | Путь | Назначение |
@@ -527,3 +528,4 @@ cookbook/
 | 2026-06-18 | Фаза 16 завершена: Dockerization — backend/Dockerfile (python:3.12-slim), entrypoint.sh (migrate→seed→collectstatic→gunicorn с exec), frontend/Dockerfile (node:20 build → nginx:1.27 serve, двухэтапная сборка), frontend/nginx.conf (proxy /api/+/static/ → backend, alias /media/ → shared volume, SPA fallback), docker-compose.yml (db+backend+frontend, healthcheck pg_isready, volumes postgres_data+media_files), whitenoise добавлен в requirements+settings. |
 | 2026-06-18 | Фаза 17 завершена: `.github/workflows/ci.yml` — два параллельных job-а. `backend`: postgres:16 service container, Python 3.12, pip cache, ruff check, pytest (coverage из pyproject.toml). `frontend`: Node 20, npm cache, npx tsc (type-check), npm test (vitest run). Триггеры: push + pull_request на master. |
 | 2026-06-18 | Фаза 18 завершена: `README.md` — быстрый старт (docker compose up --build), демо-аккаунты (alice/bob), функциональность, локальная разработка, тесты, переменные окружения, структура репозитория, CI. Чек-лист требований закрыт полностью. |
+| 2026-06-18 | Доработка: страница профиля (`/profile`, protected). Backend — `POST /api/auth/change-password/` (ChangePasswordSerializer проверяет текущий пароль, min 8 символов) + 4 теста. Frontend — ProfilePage: смена отображаемого имени (PATCH /me/ → updateUser), смена пароля, список своих рецептов (`?author=<id>`, включая приватные, с пагинацией). Добавлен `author` в RecipeFilters. |

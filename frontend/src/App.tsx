@@ -8,6 +8,7 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import NotFoundPage from './pages/NotFoundPage';
 import PlannerPage from './pages/PlannerPage';
+import ProfilePage from './pages/ProfilePage';
 import RecipeDetailPage from './pages/RecipeDetailPage';
 import RecipeFormPage from './pages/RecipeFormPage';
 import RecipesPage from './pages/RecipesPage';
@@ -59,6 +60,14 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <PlannerPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <ProfilePage />
                   </ProtectedRoute>
                 }
               />

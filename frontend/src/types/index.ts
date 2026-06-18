@@ -162,5 +162,6 @@ export interface RecipeFilters {
   ordering?: string;
   favorites?: boolean;
   ingredients?: string;
+  author?: number;
   page?: number;
 }

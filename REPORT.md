@@ -607,3 +607,35 @@ react-beautiful-dnd), Recharts, drf-spectacular, pytest, Vitest+RTL, ruff/ESLint
 
 ### Вывод
 CI с самого начала прогнал бы `tsc`/`npm ci` и поймал бы эти ошибки — но локальная сборка обнаружила их раньше. Урок: type-check (`npm run build`) нужно гонять локально до коммита, не полагаясь только на CI.
+
+---
+
+## 2026-06-18 — Доработка: страница профиля пользователя
+
+### Что сделано
+Добавлена защищённая страница `/profile` (ссылка в навбаре уже вела на неё) с тремя блоками:
+1. **Смена отображаемого имени** — форма first_name/last_name (react-hook-form + zod), `PATCH /api/auth/me/` → `updateUser()` синхронизирует контекст, localStorage и имя в навбаре.
+2. **Смена пароля** — форма (текущий / новый / подтверждение), `POST /api/auth/change-password/`.
+3. **Список своих рецептов** — `useRecipes({ author: user.id })`, грид `RecipeCard` + пагинация, кнопка «+ Новый рецепт», empty-state.
+
+**Backend:**
+- `ChangePasswordSerializer` (`apps/users/serializers.py`) — проверяет текущий пароль через `user.check_password()`, `new_password` min 8 символов.
+- `ChangePasswordView` (`POST /api/auth/change-password/`, `IsAuthenticated`).
+- Маршрут `auth/change-password/`.
+- 4 теста в `test_auth.py`: успех, неверный текущий пароль (400), короткий новый (400), без авторизации (401).
+
+**Frontend:**
+- `author?: number` добавлен в `RecipeFilters` + сериализация в `recipesApi.list`.
+- `authApi.changePassword(current, new)`.
+- `ProfilePage.tsx` (3 секции-компонента) + защищённый маршрут в `App.tsx`.
+
+### Принятые решения
+- **Смена пароля требует текущий** — стандартная безопасная практика для self-service; токены SimpleJWT остаются валидными до истечения (stateless), принудительный релогин не делаю — для демо избыточно.
+- **«Сбросить пароль» трактую как смену пароля** — пользователь на странице профиля уже авторизован, email-flow восстановления не нужен и не предусмотрен инфраструктурой.
+- **Список своих рецептов через `?author=<id>`** — фильтр уже был в backend `RecipeFilter`; для своего автора queryset отдаёт и приватные рецепты (`Q(is_public=True) | Q(author=user)`). Не плодим новый endpoint.
+- **Email показан read-only** — требование «сменить отображаемое имя» = first/last name; email оставлен как контекст (бэкенд PATCH /me/ его поддерживает, но в UI профиля не редактируется, чтобы строго следовать заданию).
+
+### Проверка
+- Backend: 10 auth-тестов проходят (6 старых + 4 новых).
+- Frontend: `tsc` 0 ошибок, 21 тест проходит.
+- End-to-end (`docker compose up --build -d`, порт 8888): логин alice → `?author=1` отдаёт её рецепты (с приватными) → смена пароля → логин с новым паролем → возврат на `alice1234` (демо сохранено) → неверный текущий пароль отклонён (400).

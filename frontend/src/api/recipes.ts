@@ -26,6 +26,7 @@ export const recipesApi = {
     if (filters.ordering) params.ordering = filters.ordering;
     if (filters.favorites) params.favorites = 'true';
     if (filters.ingredients) params.ingredients = filters.ingredients;
+    if (filters.author) params.author = filters.author;
     if (filters.page && filters.page > 1) params.page = filters.page;
     return api.get<PaginatedResponse<RecipeList>>('/recipes/', { params });
   },
