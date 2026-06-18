@@ -414,3 +414,34 @@ react-beautiful-dnd), Recharts, drf-spectacular, pytest, Vitest+RTL, ruff/ESLint
 
 ### Следующий шаг
 - Фаза 14: frontend дашборд — Recharts (bar + pie), статистики.
+
+---
+
+## 2026-06-18 — Фаза 14: frontend — дашборд (Recharts)
+
+### Что сделано
+**Хук (`src/hooks/useDashboard.ts`):** `useDashboardStats()` — `staleTime: 5 мин`, endpoint `/api/dashboard/stats/` (AllowAny).
+
+**`DashboardPage.tsx` (полная реализация):**
+- **4 StatCard** (totals): Рецептов / Ингредиентов / Комментариев / Пользователей — большое число с accent-цветом, Bootstrap grid `xs=2 md=4`.
+- **BarChart «По категориям»** (Recharts `BarChart`): вертикальные столбцы, XAxis с `angle=-35` чтобы длинные подписи не перекрывались, `radius=[3,3,0,0]` для скруглённых верхушек.
+- **PieChart «По сложности»** (Recharts `PieChart`): donut (`innerRadius=52, outerRadius=82`), 3 цвета — зелёный/жёлтый/красный через `DIFF_COLORS`, `Legend` снизу.
+- **BarChart «По времени»** (`layout="vertical"` — горизонтальные полосы): XAxis type="number", YAxis type="category" с range-строками из бэкенда, `radius=[0,3,3,0]`.
+- **Топ теги**: badge-облако из `top_tags` (name + count).
+- **Топ-5 по рейтингу**: ранг + ссылка на рецепт + `StarRating` компонент.
+- **Топ-5 по избранному**: ранг + ссылка + счётчик `♥ N`.
+- Все чарты завёрнуты в `ResponsiveContainer width="100%"` — адаптируются под ширину колонки.
+- Все секции — в `Section` (Card-обёртка), загрузка — Spinner, ошибка — Alert.
+
+### Принятые решения
+- **`staleTime: 5 мин`** — данные дашборда не меняются мгновенно, не нужно рефетчить при каждом фокусе.
+- **Donut вместо pie** — с `innerRadius` центральная область свободна для подписей Legend, легче читать.
+- **`layout="vertical"` для cooking_time** — range-строки с символами («< 15 мин», «> 60 мин») лучше читаются как метки оси Y, а не повёрнутые метки X.
+- **`angle=-35` на XAxis категорий** — 8 категорий не помещаются горизонтально, лёгкий наклон без потери читаемости.
+- **`Section` компонент** — переиспользуемый Card с заголовком, устраняет повторение `Card.Body + h6`.
+
+### Проблемы и решения
+- Нет. TypeScript-компиляция корректна.
+
+### Следующий шаг
+- Фаза 15: frontend тесты (Vitest + React Testing Library, ≥5 тестов).
