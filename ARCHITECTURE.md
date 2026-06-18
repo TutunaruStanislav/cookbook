@@ -77,7 +77,7 @@ React + PostgreSQL.
 ### Базовые функциональные
 - [x] CRUD сущностей + валидация (клиент + сервер) → backend: Recipe/Ingredient/Category/Tag (Phase 2)
 - [x] Поиск и фильтрация по ключевым полям — backend: SearchFilter + django-filter + ingredient search (Phase 2–3)
-- [ ] Дашборд с визуализацией (графики/статистика)
+- [x] Дашборд с визуализацией — /api/dashboard/stats/ (totals, by_category, by_difficulty, cooking_time, top ratings/favorites, top tags) (Phase 7)
 - [x] Пагинация списков — PageNumberPagination (PAGE_SIZE=12, Phase 1)
 - [ ] Адаптивная вёрстка (desktop + mobile)
 
@@ -515,3 +515,4 @@ cookbook/
 | 2026-06-18 | Фазы 3+4 завершены: поиск/фильтры подтверждены (были готовы в Phase 2). Auth: register/login/refresh/me, кастомный LoginView возвращает user в ответе. |
 | 2026-06-18 | Фаза 5 завершена: Favorite (toggle), Rating (upsert, avg), Comment (CanDeleteComment). is_favorited/ratings_count через Exists-аннотацию в queryset. |
 | 2026-06-18 | Фаза 6 завершена: MenuPlan/MealSlot, auto-create slots, shopping list с учётом кратности рецептов. |
+| 2026-06-18 | Фаза 7 завершена: /api/dashboard/stats/ — 7 агрегатов в одном endpoint (Count/Avg/Q). Новых моделей нет. |
