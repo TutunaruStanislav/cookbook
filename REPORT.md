@@ -37,4 +37,64 @@ react-beautiful-dnd), Recharts, drf-spectacular, pytest, Vitest+RTL, ruff/ESLint
 - Пока нет.
 
 ### Следующий шаг
-- Ожидаю ревью `ARCHITECTURE.md` и плана. После согласования — Фаза 1 (backend foundation).
+- Фаза 1 (backend foundation).
+
+---
+
+## 2026-06-18 — Фаза 1: backend foundation
+
+### Что сделано
+- Создана структура `backend/`: `config/` (settings, urls, wsgi, asgi), `apps/` (users, recipes, social, planner, dashboard).
+- `config/settings.py` — все настройки из env-переменных: БД, JWT, CORS, пагинация (PAGE_SIZE=12), фильтры, схема OpenAPI.
+- SimpleJWT: access 60 мин / refresh 7 дней / rotate refresh tokens.
+- drf-spectacular: `/api/schema/`, `/api/docs/` (Swagger UI), `/api/redoc/`.
+- Health check: `GET /api/health/` → `{"status": "ok"}`.
+- `requirements.txt` + `requirements-dev.txt` (pytest, factory-boy, ruff, Faker).
+- `pyproject.toml`: конфиг ruff + pytest с `DJANGO_SETTINGS_MODULE`.
+- `.env.example` с шаблоном всех переменных.
+- `manage.py check` — **0 ошибок** на Python 3.14 + Django 5.2.
+
+### Проблемы и решения
+- **Breaking change в drf-spectacular 0.29:** класс `SpectacularSwaggerUIView` переименован в `SpectacularSwaggerView`. Обнаружено при `manage.py check`, исправлено немедленно, зафиксировано в ARCHITECTURE.md. Причина: документация на PyPI отстаёт от changelog пакета.
+
+### Удачные шаги
+- `psycopg[binary]` для Python 3.14 оказался доступен — бинарные wheels уже есть, никаких проблем с установкой.
+- Проверка через `manage.py check` сразу выявила проблему с импортом — не пришлось поднимать сервер.
+
+### Неудачные шаги
+- Нет.
+
+### Следующий шаг
+- Фаза 2: модели (Recipe, Ingredient, Category, Tag, RecipeStep, RecipeIngredient) + миграции + сериализаторы + ViewSets + права доступа + пагинация.
+
+---
+
+## 2026-06-18 — Фаза 2: домен рецептов — модели, CRUD, права
+
+### Что сделано
+- Модели: `Category`, `Tag`, `Ingredient`, `Recipe`, `RecipeIngredient`, `RecipeStep` в `apps/recipes/models.py`.
+- `RecipeIngredient`: 8 единиц измерения (г, мл, шт, ст.л., ч.л., кг, л, щепотка); `UniqueConstraint` на пару `(recipe, ingredient)`.
+- `RecipeStep`: упорядочены по `order`, `UniqueConstraint` на `(recipe, order)`.
+- Сериализаторы: `RecipeListSerializer` (лёгкий), `RecipeDetailSerializer` (полный), `RecipeWriteSerializer` (вложенный write с `bulk_create`).
+- Масштабирование порций: `?servings=N` в `GET /api/recipes/{id}/` — пересчитывает `scaled_amount` в `RecipeIngredientReadSerializer` через `Decimal` с ROUND_HALF_UP.
+- `RecipeViewSet`: CRUD + `IsAuthorOrReadOnly`, `get_queryset` с фильтрацией public/private через `Q`, поиск по ингредиентам `?ingredients=`, фильтр `?favorites=true`.
+- `CategoryViewSet`, `TagViewSet` — read-only без пагинации (для дропдаунов).
+- `IngredientViewSet` — read-only + `SearchFilter` по имени.
+- `django-filter` через `RecipeFilter`: difficulty, category, tag, min/max_time, author, is_public.
+- `admin.py`: инлайны для IngredientInline и StepInline, prepopulated slugs.
+- Начальная миграция `0001_initial.py`.
+
+### Проблемы и решения
+- **`makemigrations` зависает без PostgreSQL**: команда пытается проверить историю миграций в БД и ждёт таймаута TCP. Решение — написал миграцию `0001_initial.py` вручную. `manage.py check` подтверждает корректность (0 ошибок).
+- **`avg_rating` и `is_favorited` на несохранённых инстансах**: после `create`/`update` в `RecipeWriteSerializer.to_representation` делаю повторный SELECT с аннотацией, чтобы поле всегда присутствовало. Один дополнительный запрос, зато корректный ответ.
+
+### Удачные шаги
+- Ingredient-based search через цепочку `.filter()` на разных JOIN-ах — корректно реализует логику «содержит ВСЕ указанные ингредиенты».
+- `bulk_create` для ингредиентов и шагов при обновлении рецепта.
+
+### Неудачные шаги
+- Забыл добавить `DjangoFilterBackend` в `filter_backends` `RecipeViewSet` — обнаружил при ревью кода, исправил до коммита.
+
+### Следующий шаг
+- Фаза 3: поиск и фильтры (уже частично встроены) — нужно подключить и протестировать.
+- Фаза 4: Auth — регистрация, login, refresh, me.

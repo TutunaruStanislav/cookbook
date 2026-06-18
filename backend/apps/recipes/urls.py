@@ -1,5 +1,12 @@
-from django.urls import path
+from rest_framework.routers import DefaultRouter
 
-app_name = "recipes"
+from .views import CategoryViewSet, IngredientViewSet, RecipeViewSet, TagViewSet
 
-urlpatterns: list = []
+router = DefaultRouter()
+router.register('recipes', RecipeViewSet, basename='recipe')
+router.register('categories', CategoryViewSet, basename='category')
+router.register('tags', TagViewSet, basename='tag')
+router.register('ingredients', IngredientViewSet, basename='ingredient')
+
+app_name = 'recipes'
+urlpatterns = router.urls
