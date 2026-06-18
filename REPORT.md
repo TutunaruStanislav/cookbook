@@ -475,3 +475,49 @@ react-beautiful-dnd), Recharts, drf-spectacular, pytest, Vitest+RTL, ruff/ESLint
 
 ### Следующий шаг
 - Фаза 16: Dockerization (Dockerfile backend, Dockerfile frontend, nginx, docker-compose, entrypoint: migrate → seed → collectstatic → gunicorn).
+
+---
+
+## 2026-06-18 — Фаза 16: Dockerization
+
+### Что сделано
+**`backend/Dockerfile`** — `python:3.12-slim`, `PYTHONUNBUFFERED/PYTHONDONTWRITEBYTECODE`, `pip install --no-cache-dir`, `EXPOSE 8000`, `ENTRYPOINT entrypoint.sh`.
+
+**`backend/entrypoint.sh`** — последовательность при каждом старте контейнера:
+1. `python manage.py migrate --noinput`
+2. `python manage.py seed` (идемпотентно — безопасно при перезапуске)
+3. `python manage.py collectstatic --noinput`
+4. `exec gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 120 --access-logfile -`
+
+**`frontend/Dockerfile`** — двухэтапная сборка: `node:20-alpine` для `npm ci && npm run build`, затем `nginx:1.27-alpine` для раздачи `dist/`.
+
+**`frontend/nginx.conf`** — конфигурация nginx:
+- `/api/` → proxy_pass `backend:8000` (timeout 120s)
+- `/static/` → proxy_pass `backend:8000` (Django admin CSS через WhiteNoise)
+- `/media/` → alias `/app/media/` (shared volume, expires 7d)
+- `location /` → `try_files` с fallback на `index.html` (SPA-роутинг React Router)
+
+**`docker-compose.yml`** — три сервиса:
+- `db` — `postgres:16-alpine`, healthcheck (`pg_isready`), именованный volume `postgres_data`
+- `backend` — depends_on db с `condition: service_healthy`, volume `media_files:/app/media`
+- `frontend` — порт `${PORT:-80}:80`, volume `media_files:/app/media:ro` (read-only)
+
+**`backend/requirements.txt`** — добавлен `whitenoise>=6.8`.
+
+**`backend/config/settings.py`** — добавлен `whitenoise.middleware.WhiteNoiseMiddleware` после SecurityMiddleware (нужен для раздачи `/static/` в production при DEBUG=False).
+
+**`.dockerignore`** — `backend/` (исключает `__pycache__`, `.env`, `staticfiles/`, `media/`, `.git/`), `frontend/` (исключает `node_modules/`, `dist/`, `.env*`, `.git/`).
+
+### Принятые решения
+- **WhiteNoise** — стандартный способ раздачи Django static files через Gunicorn без отдельного тома; nginx проксирует `/static/` на backend, WhiteNoise перехватывает в middleware.
+- **Shared volume `media_files`** — backend пишет, nginx читает (`:ro`) и отдаёт напрямую без проксирования на Gunicorn — эффективнее.
+- **`depends_on: condition: service_healthy`** — backend стартует только после того, как PostgreSQL принял соединения; healthcheck `pg_isready` с `retries: 10`.
+- **Entrypoint без `|| true`** — `seed` идемпотентен и всегда возвращает 0; `set -e` прерывает скрипт при реальной ошибке.
+- **`exec gunicorn`** — `exec` заменяет shell-процесс Gunicorn, чтобы сигналы (SIGTERM от Docker) корректно доходили до воркеров.
+- **`${VAR:-default}` в compose** — разумные defaults для локального запуска без `.env`; секретный ключ по умолчанию явно помечен как "change-in-production".
+
+### Проблемы и решения
+- Нет.
+
+### Следующий шаг
+- Фаза 17: CI/GitHub Actions (lint + test backend на push).
