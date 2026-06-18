@@ -96,5 +96,38 @@ react-beautiful-dnd), Recharts, drf-spectacular, pytest, Vitest+RTL, ruff/ESLint
 - Забыл добавить `DjangoFilterBackend` в `filter_backends` `RecipeViewSet` — обнаружил при ревью кода, исправил до коммита.
 
 ### Следующий шаг
-- Фаза 3: поиск и фильтры (уже частично встроены) — нужно подключить и протестировать.
-- Фаза 4: Auth — регистрация, login, refresh, me.
+- Фазы 3 + 4: поиск/фильтры (доработка) + Auth.
+
+---
+
+## 2026-06-18 — Фазы 3 + 4: поиск/фильтры + аутентификация
+
+### Что сделано
+
+**Фаза 3 — поиск и фильтры:**
+Реализована ещё в Фазе 2, подтверждена как полная:
+- `?search=` — по `title` и `description` (DRF `SearchFilter`)
+- `?ingredients=курица,рис` — «что приготовить из…», цепочка `.filter()` для логики AND
+- `?difficulty=`, `?category=`, `?tag=`, `?min_time=`, `?max_time=`, `?author=`, `?is_public=` — через `RecipeFilter`
+- `?ordering=avg_rating` / `-avg_rating` / `cooking_time` / `created_at` — через `OrderingFilter` + аннотация `Avg`
+- `?favorites=true` — только избранное текущего пользователя
+
+**Фаза 4 — Auth:**
+- `POST /api/auth/register/` — регистрация, возвращает данные пользователя (без пароля)
+- `POST /api/auth/login/` — кастомный `LoginView` на базе SimpleJWT, возвращает `{access, refresh, user: {...}}` — фронтенд получает данные пользователя сразу, без доп. запроса к `/me/`
+- `POST /api/auth/refresh/` — обновление access-токена
+- `GET/PATCH /api/auth/me/` — текущий пользователь, частичное обновление профиля
+- `admin.py` — кастомный `UserAdmin` с удобным `list_display`
+
+### Принятые решения
+- **Логин возвращает user-данные** — расширил `TokenObtainPairSerializer`, добавив `user` в ответ. Это избавляет фронтенд от двух запросов при логине.
+- **`read_only_fields = ['id', 'username']` в `UserSerializer`** — username не меняется через PATCH /me/, только email/имя.
+
+### Проблемы и решения
+- Нет. Фаза прошла чисто — `manage.py check` 0 ошибок.
+
+### Удачные шаги
+- Поиск/фильтры оказались полностью готовы ещё с Фазы 2, не потребовалось дополнительной работы.
+
+### Следующий шаг
+- Фаза 5: социальные функции — Favorite, Rating, Comment (модели + API + права).
