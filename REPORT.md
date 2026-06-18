@@ -336,3 +336,44 @@ react-beautiful-dnd), Recharts, drf-spectacular, pytest, Vitest+RTL, ruff/ESLint
 
 ### Следующий шаг
 - Фаза 12: frontend социальные функции — интерактивный рейтинг (звёзды), комментарии (список + форма + удаление).
+
+---
+
+## 2026-06-18 — Фаза 12: frontend — социальные функции (рейтинг + комментарии)
+
+### Что сделано
+**Новые хуки (`src/hooks/useSocial.ts`):**
+- `useRateRecipe` — мутация `POST /api/recipes/{id}/rate/`, инвалидирует рецепт и список.
+- `useComments(recipeId, page)` — query с ключом `['comments', recipeId, page]`.
+- `useAddComment(recipeId)` — мутация `POST /api/recipes/{id}/comments/`, инвалидирует комментарии к рецепту.
+- `useDeleteComment(recipeId)` — мутация `DELETE /api/comments/{id}/`, инвалидирует комментарии к рецепту.
+
+**Компонент `InteractiveStarRating.tsx`:**
+- Для неавторизованных: статичный StarRating + подпись «Войдите, чтобы оценить».
+- Для авторизованных: 5 интерактивных звёзд с hover-эффектом (цвет `#ffc107` / `#dee2e6`), клик вызывает `useRateRecipe`.
+- Локальный `myRating` state — сохраняет ответ сервера (`result.value`) и показывает «Ваша оценка: N».
+- Под звёздами — агрегатный `StarRating` (среднее + счётчик).
+
+**Компонент `CommentsSection.tsx`:**
+- Список комментариев с author (first_name+last_name или username), датой, текстом.
+- Кнопка «Удалить» — видна если `user.id === comment.author.id || user.id === recipe.author.id` (логика `CanDeleteComment` из backend).
+- Пагинация через `AppPagination` (при count > PAGE_SIZE).
+- Форма добавления (textarea + кнопка) — только для авторизованных; неавторизованным — ссылка «Войдите».
+- После добавления сбрасывает текст и возвращает страницу на 1.
+- Форматирование даты на русском (`toLocaleDateString('ru-RU', ...)`).
+
+**`RecipeDetailPage.tsx` обновлён:**
+- Пункт «Рейтинг» в meta-листе заменён на `InteractiveStarRating`.
+- В конце правой колонки, после шагов, добавлен `<CommentsSection>`.
+
+### Принятые решения
+- **Отдельный файл `useSocial.ts`** — не смешиваем recipe-CRUD с social-мутациями, легче читать.
+- **`myRating` как локальный state** — бэкенд не возвращает текущий рейтинг пользователя в detail-ответе, поэтому храним последнее отправленное значение в состоянии компонента; при перезагрузке страницы сбрасывается (нет смысла усложнять ради демо).
+- **Hover без библиотек** — простой `onMouseEnter`/`onMouseLeave` на span, 0 доп. зависимостей.
+- **`canDelete` строка в CommentsSection** — дублирует серверную логику `CanDeleteComment`, но UI должен самостоятельно скрывать кнопку без лишних запросов.
+
+### Проблемы и решения
+- Нет. TypeScript-компиляция корректна.
+
+### Следующий шаг
+- Фаза 13: frontend планировщик меню (DnD-сетка 7×3, список покупок, порции).

@@ -12,7 +12,8 @@ import {
   Table,
 } from 'react-bootstrap';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import StarRating from '../components/StarRating';
+import CommentsSection from '../components/CommentsSection';
+import InteractiveStarRating from '../components/InteractiveStarRating';
 import { useAuth } from '../contexts/AuthContext';
 import { useDeleteRecipe, useFavoriteToggle, useRecipe } from '../hooks/useRecipes';
 import { DIFFICULTY_LABELS, UNIT_LABELS } from '../types';
@@ -97,9 +98,13 @@ export default function RecipeDetailPage() {
               <span className="text-muted">Время</span>
               <strong>{recipe.cooking_time} мин</strong>
             </ListGroup.Item>
-            <ListGroup.Item className="d-flex justify-content-between align-items-center">
-              <span className="text-muted">Рейтинг</span>
-              <StarRating value={recipe.avg_rating} count={recipe.ratings_count} size="md" />
+            <ListGroup.Item>
+              <div className="text-muted mb-1">Рейтинг</div>
+              <InteractiveStarRating
+                recipeId={recipe.id}
+                avgRating={recipe.avg_rating}
+                ratingsCount={recipe.ratings_count}
+              />
             </ListGroup.Item>
             {!recipe.is_public && (
               <ListGroup.Item>
@@ -238,6 +243,8 @@ export default function RecipeDetailPage() {
               </ol>
             </section>
           )}
+
+          <CommentsSection recipeId={recipe.id} recipeAuthorId={recipe.author.id} />
         </Col>
       </Row>
 
