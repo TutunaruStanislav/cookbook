@@ -265,3 +265,40 @@ react-beautiful-dnd), Recharts, drf-spectacular, pytest, Vitest+RTL, ruff/ESLint
 
 ### Следующий шаг
 - Фаза 10: frontend foundation (Vite + React + TypeScript + Bootstrap 5, роутинг, AuthContext, API-клиент, layout/Navbar).
+
+---
+
+## 2026-06-18 — Фаза 10: frontend foundation
+
+### Что сделано
+- **Scaffold**: `frontend/` — Vite 5 + React 18 + TypeScript 5, `package.json`, `tsconfig.json`, `vite.config.ts` (proxy `/api` и `/media` → localhost:8000), `.eslintrc.cjs`, `.prettierrc`.
+- **Типы** (`src/types/index.ts`): все интерфейсы — User, RecipeList, RecipeDetail, RecipeIngredient, RecipeStep, Category, Tag, Ingredient, Comment, MenuPlan, MealSlot, ShoppingItem, DashboardStats, RecipeFilters, вспомогательные словари DIFFICULTY_LABELS / UNIT_LABELS / MEAL_TYPE_LABELS.
+- **API-клиент** (`src/api/client.ts`): axios с базовым URL `/api`, request interceptor (Authorization header из localStorage), response interceptor — на 401 пробует refresh, при неудаче чистит localStorage и редиректит на `/login`.
+- **API-модули**:
+  - `src/api/auth.ts`: login, register, me, updateMe
+  - `src/api/recipes.ts`: list (с фильтрами), detail (?servings=N), create, update, remove, favorite, rate, comments, addComment, deleteComment; catalogApi (categories/tags/ingredients); plannerApi (plan/updateSlot/shoppingList); dashboardApi (stats)
+- **AuthContext** (`src/contexts/AuthContext.tsx`): user state из localStorage, login/logout/updateUser; `useAuth()` hook.
+- **Компоненты**:
+  - `AppNavbar.tsx`: Bootstrap 5 responsive Navbar, collapse на md, показывает имя/кнопку «Выйти» или «Войти»/«Регистрация», планировщик — только авторизованным.
+  - `Layout.tsx`: flex-column min-vh-100, sticky Navbar + main + footer.
+  - `ProtectedRoute.tsx`: redirect на /login с сохранением location.state.from.
+- **Страницы**:
+  - `LoginPage.tsx`: react-hook-form + zod, показывает ошибку сервера, редиректит на from-path.
+  - `RegisterPage.tsx`: полная форма (username / имя / фамилия / email / пароль / подтверждение), zod-валидация включая regex и password.refine, серверные ошибки из detail.
+  - `HomePage.tsx`: hero-секция, три feature-карточки, блок с демо-аккаунтами.
+  - `NotFoundPage.tsx`: 404 с кнопкой «На главную».
+  - Placeholder-страницы: RecipesPage, DashboardPage, PlannerPage.
+- **App.tsx**: QueryClientProvider + BrowserRouter + AuthProvider + Routes, ProtectedRoute для /planner.
+- **vitest setup**: `src/test/setup.ts` с `@testing-library/jest-dom`.
+
+### Принятые решения
+- **Token refresh в axios interceptor** — прозрачен для всех вызовов API, не нужно обрабатывать 401 в каждом компоненте.
+- **`force_authenticate` через `localStorage`** — при перезагрузке страницы user восстанавливается из localStorage без запроса к `/me/`. Консистентность за счёт обновления хранилища при каждом `updateUser`.
+- **Весь API в трёх файлах** (`auth.ts`, `recipes.ts` с catalogApi/plannerApi/dashboardApi) — единая точка входа, легко тестировать/мокировать.
+- **Placeholder-страницы** — сразу видно где какая фаза, роутинг полностью работает.
+
+### Проблемы и решения
+- Нет. TypeScript компиляция корректна (`tsc --noEmit` не имеет ошибок по структуре).
+
+### Следующий шаг
+- Фаза 11: frontend рецепты — список с поиском/фильтрами/пагинацией, карточка, детальная страница, CRUD-формы.
