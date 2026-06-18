@@ -234,3 +234,34 @@ react-beautiful-dnd), Recharts, drf-spectacular, pytest, Vitest+RTL, ruff/ESLint
 
 ### Следующий шаг
 - Фаза 9: backend-тесты (≥10 pytest-тестов с pytest-cov).
+
+---
+
+## 2026-06-18 — Фаза 9: backend-тесты
+
+### Что сделано
+Написано **45 pytest-тестов** в 5 файлах (`backend/tests/`):
+
+| Файл | Тестов | Что покрыто |
+|---|---|---|
+| `test_auth.py` | 6 | register (201, нет password в ответе), login (токены + user), невалидный login (401), GET /me/, PATCH /me/, auth guard |
+| `test_recipes.py` | 12 | видимость public/private (анон/авторизован), CRUD (create/update/delete), права не-автора (403), поиск по ингредиентам, поиск по названию, масштабирование порций (×0.5, ×2, без масштабирования) |
+| `test_social.py` | 13 | toggle favorite (add/remove), auth guard избранного, фильтр ?favorites=true, rating upsert, avg по нескольким пользователям, валидация value>5/value=0, auth guard рейтинга, создание комментария, список публичен, удаление автором/владельцем рецепта/запрет чужому |
+| `test_planner.py` | 7 | auth guard, отсутствие week_start (400), не-понедельник (400), автосоздание 21 слота, идемпотентность, список покупок (пустой план, агрегация, двойное количество за 2 слота) |
+| `test_dashboard.py` | 7 | доступ анониму, все required keys, структура totals, считает только публичные, 4 диапазона cooking_time, top_by_rating и top_by_favorites |
+
+- `conftest.py` с фикстурами: `api_client`, `make_user`, `alice`, `bob`, `make_recipe`.
+- Тесты используют `force_authenticate` — не зависят от JWT-времени жизни.
+- Каждый тест изолирован (django_db транзакции откатываются).
+
+### Принятые решения
+- **Один модуль `conftest.py`** с общими фикстурами — не повторяем setup в каждом файле.
+- **`force_authenticate` вместо JWT-токенов** в тестах — быстрее, нет зависимости от времени.
+- **Уникальные имена ингредиентов** в тестах (Мука_test, Соль_дважды и т.д.) — изолируют тесты между собой при запуске одной транзакцией.
+- **45 тестов >> 10** — покрыт весь основной business logic.
+
+### Проблемы и решения
+- Нет. Все тесты написаны в соответствии с реальным поведением endpoints.
+
+### Следующий шаг
+- Фаза 10: frontend foundation (Vite + React + TypeScript + Bootstrap 5, роутинг, AuthContext, API-клиент, layout/Navbar).

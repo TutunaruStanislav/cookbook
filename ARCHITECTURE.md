@@ -82,9 +82,9 @@ React + PostgreSQL.
 - [ ] Адаптивная вёрстка (desktop + mobile)
 
 ### Нефункциональные
-- [ ] Seed-данные (реалистичный демо-набор)
+- [x] Seed-данные (реалистичный демо-набор) — 28 рецептов, 64 ингредиента, план меню (Phase 8)
 - [x] REST API + живая OpenAPI/Swagger страница — `/api/docs/` (drf-spectacular 0.29)
-- [ ] ≥ 10 unit/integration тестов
+- [x] ≥ 10 unit/integration тестов — 45 pytest-тестов (5 файлов, Phase 9)
 - [ ] CI (GitHub Actions): lint + тесты; Docker-образ — опционально
 - [ ] Запуск одной командой `docker compose up`
 - [ ] README.md с инструкцией
@@ -517,3 +517,4 @@ cookbook/
 | 2026-06-18 | Фаза 6 завершена: MenuPlan/MealSlot, auto-create slots, shopping list с учётом кратности рецептов. |
 | 2026-06-18 | Фаза 7 завершена: /api/dashboard/stats/ — 7 агрегатов в одном endpoint (Count/Avg/Q). Новых моделей нет. |
 | 2026-06-18 | Фаза 8 завершена: management command `seed.py` — 28 рецептов (1 приватный), 64 ингредиента, 8 категорий, 8 тегов, 22 комментария, 15 рейтингов, 10 избранных, PIL-заглушки 400×300. Готовый план меню для alice на текущую неделю (21 слот). Идемпотентность через `get_or_create`. |
+| 2026-06-18 | Фаза 9 завершена: 45 pytest-тестов в 5 файлах (test_auth / test_recipes / test_social / test_planner / test_dashboard). Покрыты: auth, CRUD, права, видимость, поиск, масштабирование порций, избранное, рейтинги, комментарии, планировщик, список покупок, дашборд. |
