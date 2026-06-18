@@ -131,3 +131,29 @@ react-beautiful-dnd), Recharts, drf-spectacular, pytest, Vitest+RTL, ruff/ESLint
 
 ### Следующий шаг
 - Фаза 5: социальные функции — Favorite, Rating, Comment (модели + API + права).
+
+---
+
+## 2026-06-18 — Фаза 5: социальные функции — Favorite, Rating, Comment
+
+### Что сделано
+- Модели `Favorite`, `Rating`, `Comment` в `apps/social/models.py`.
+- `Rating.value` — `PositiveSmallIntegerField` с `MinValueValidator(1)` / `MaxValueValidator(5)`.
+- `unique_together` на (user, recipe) у `Favorite` и `Rating`.
+- `POST /api/recipes/{id}/favorite/` — toggle: создаёт или удаляет, возвращает `{is_favorited, recipe_id}`.
+- `POST /api/recipes/{id}/rate/` — upsert через `update_or_create`, возвращает `{value, avg_rating, recipe_id}`.
+- `GET/POST /api/recipes/{id}/comments/` — список + создание комментария.
+- `DELETE /api/comments/{id}/` — удаление: автор комментария **или** владелец рецепта (`CanDeleteComment`).
+- Обновлены `RecipeListSerializer` и `RecipeDetailSerializer`: добавлены поля `is_favorited`, `ratings_count`.
+- `RecipeViewSet.get_queryset` — аннотации `avg_rating`, `ratings_count`, `is_favorited` через `Exists`-подзапрос (один SQL, без N+1).
+
+### Принятые решения
+- **`is_favorited` через `Exists`-аннотацию** (а не `SerializerMethodField` с запросом на каждый объект) — один дополнительный подзапрос на весь list вместо N запросов.
+- **Ленивый импорт `Favorite`** в `apps/recipes/views.py` — избегает потенциального циклического импорта на уровне модуля (`social` зависит от `recipes`).
+- **`RatingView` возвращает обновлённый `avg_rating`** — фронтенд обновляет UI без повторного запроса рецепта.
+
+### Проблемы и решения
+- Нет. `manage.py check` — 0 ошибок.
+
+### Следующий шаг
+- Фаза 6: планировщик меню (MenuPlan, MealSlot) + список покупок + масштабирование порций (API).

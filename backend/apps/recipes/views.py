@@ -1,4 +1,4 @@
-from django.db.models import Avg, Q
+from django.db.models import Avg, BooleanField, Count, Exists, OuterRef, Q, Value
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, viewsets
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
@@ -47,19 +47,30 @@ class RecipeViewSet(viewsets.ModelViewSet):
     ordering = ['-created_at']
 
     def get_queryset(self):
+        from apps.social.models import Favorite  # lazy import — social depends on recipes
+
+        user = self.request.user
         qs = (
             Recipe.objects.select_related('author')
             .prefetch_related(
                 'categories', 'tags', 'recipe_ingredients__ingredient', 'steps'
             )
-            .annotate(avg_rating=Avg('ratings__value'))
+            .annotate(
+                avg_rating=Avg('ratings__value'),
+                ratings_count=Count('ratings', distinct=True),
+            )
         )
 
-        user = self.request.user
         if user.is_authenticated:
-            qs = qs.filter(Q(is_public=True) | Q(author=user))
+            qs = qs.filter(Q(is_public=True) | Q(author=user)).annotate(
+                is_favorited=Exists(
+                    Favorite.objects.filter(recipe=OuterRef('pk'), user=user)
+                )
+            )
         else:
-            qs = qs.filter(is_public=True)
+            qs = qs.filter(is_public=True).annotate(
+                is_favorited=Value(False, output_field=BooleanField())
+            )
 
         # «Что приготовить из…»: ?ingredients=курица,рис
         ingredients_param = self.request.query_params.get('ingredients', '').strip()

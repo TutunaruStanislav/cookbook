@@ -64,16 +64,25 @@ class RecipeListSerializer(serializers.ModelSerializer):
     categories = CategorySerializer(many=True, read_only=True)
     tags = TagSerializer(many=True, read_only=True)
     avg_rating = serializers.SerializerMethodField()
+    ratings_count = serializers.SerializerMethodField()
+    is_favorited = serializers.SerializerMethodField()
 
     def get_avg_rating(self, obj):
         return getattr(obj, 'avg_rating', None)
+
+    def get_ratings_count(self, obj):
+        return getattr(obj, 'ratings_count', 0) or 0
+
+    def get_is_favorited(self, obj):
+        return bool(getattr(obj, 'is_favorited', False))
 
     class Meta:
         model = Recipe
         fields = [
             'id', 'title', 'description', 'cooking_time', 'difficulty',
             'photo', 'servings', 'author', 'is_public',
-            'categories', 'tags', 'avg_rating', 'created_at',
+            'categories', 'tags', 'avg_rating', 'ratings_count',
+            'is_favorited', 'created_at',
         ]
 
 
@@ -84,9 +93,17 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
     steps = RecipeStepSerializer(many=True, read_only=True)
     ingredients = serializers.SerializerMethodField()
     avg_rating = serializers.SerializerMethodField()
+    ratings_count = serializers.SerializerMethodField()
+    is_favorited = serializers.SerializerMethodField()
 
     def get_avg_rating(self, obj):
         return getattr(obj, 'avg_rating', None)
+
+    def get_ratings_count(self, obj):
+        return getattr(obj, 'ratings_count', 0) or 0
+
+    def get_is_favorited(self, obj):
+        return bool(getattr(obj, 'is_favorited', False))
 
     def get_ingredients(self, obj):
         qs = obj.recipe_ingredients.select_related('ingredient')
@@ -98,7 +115,8 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
             'id', 'title', 'description', 'cooking_time', 'difficulty',
             'photo', 'servings', 'author', 'is_public',
             'categories', 'tags', 'steps', 'ingredients',
-            'avg_rating', 'created_at', 'updated_at',
+            'avg_rating', 'ratings_count', 'is_favorited',
+            'created_at', 'updated_at',
         ]
 
 
