@@ -377,3 +377,40 @@ react-beautiful-dnd), Recharts, drf-spectacular, pytest, Vitest+RTL, ruff/ESLint
 
 ### Следующий шаг
 - Фаза 13: frontend планировщик меню (DnD-сетка 7×3, список покупок, порции).
+
+---
+
+## 2026-06-18 — Фаза 13: frontend — планировщик меню (DnD + список покупок)
+
+### Что сделано
+**Хуки (`src/hooks/usePlanner.ts`):**
+- `usePlan(weekStart)` — загружает план на неделю (автосоздание 21 слота на сервере).
+- `useUpdateSlot(weekStart)` — мутация `PATCH /api/menu-plan/slots/{id}/`, инвалидирует план и список покупок.
+- `useShoppingList(weekStart, enabled)` — ленивая загрузка (только когда `enabled=true`).
+
+**Компонент `RecipePickerModal.tsx`:**
+- Bootstrap Modal с поиском (debounced через React Query, `search` param).
+- Список рецептов из `useRecipes`, при выборе закрывает модал и возвращает рецепт.
+
+**`PlannerPage.tsx` (полная реализация):**
+- Навигация по неделям: «← Пред.», «След. →», «Текущая неделя» (показывается только если не текущая). Даты вычисляются без UTC-сдвигов (`new Date(y, m-1, d)`).
+- DnD через `@dnd-kit/core`: `DndContext` + `PointerSensor` с `activationConstraint: { distance: 8 }` (нет случайных drag при клике).
+- Сетка: Bootstrap `Table` + `overflow-x: auto` для адаптивности. Строки = приёмы пищи, столбцы = дни недели.
+- `SlotCell` (`useDroppable`) — droppable-ячейка: если пусто — кнопка «+» (пунктирная рамка, `isOver` меняет цвет); если заполнено — `RecipeChip`.
+- `RecipeChip` (`useDraggable`) — отдельная ручка-захватчик `⠿` (только она обрабатывает drag listeners), кнопка `×` с `onPointerDown: stopPropagation` чтобы не активировать drag; клик по названию открывает пикер для замены.
+- `DragOverlay` — ghostкопия чипа при перетаскивании.
+- `handleDragEnd` — drop на пустую ячейку: перемещение; drop на занятую: swap (два последовательных `mutateAsync`).
+- Список покупок: кнопка-переключатель → lazy-load `useShoppingList` → Bootstrap Table (ингредиент + сумма + единица через `UNIT_LABELS`).
+
+### Принятые решения
+- **`PointerSensor.activationConstraint: { distance: 8 }`** — клик по `×` или по названию не активирует drag; перетаскивание начинается только при реальном движении.
+- **Drag handle отдельно от содержимого** — `listeners` только на `⠿`-span, не на весь чип; так кнопка «×» и клик на название работают без конфликта с DnD.
+- **Два `mutateAsync` для swap** — простейшая корректная реализация; оба вызова инвалидируют план, финальный рефетч даёт правильный состояние без оптимистичных обновлений.
+- **`useShoppingList(enabled)` — ленивая загрузка** — не делаем запрос при загрузке страницы; только когда пользователь открывает секцию.
+- **Дата без UTC-сдвига** — `new Date(y, m-1, d)` (локальный конструктор) вместо `new Date(isoString)` — нет риска сдвига на ±1 день в часовых поясах западнее UTC.
+
+### Проблемы и решения
+- Нет. TypeScript-компиляция корректна.
+
+### Следующий шаг
+- Фаза 14: frontend дашборд — Recharts (bar + pie), статистики.
