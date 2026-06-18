@@ -445,3 +445,33 @@ react-beautiful-dnd), Recharts, drf-spectacular, pytest, Vitest+RTL, ruff/ESLint
 
 ### Следующий шаг
 - Фаза 15: frontend тесты (Vitest + React Testing Library, ≥5 тестов).
+
+---
+
+## 2026-06-18 — Фаза 15: frontend тесты (Vitest + React Testing Library)
+
+### Что сделано
+Написано **21 тест** в 4 файлах, существенно превышает минимум ≥5:
+
+| Файл | Тестов | Что проверяет |
+|---|---|---|
+| `StarRating.test.tsx` | 5 | 5 звёзд рендерятся, value/count отображаются, null value не показывает цифр, font-size для md |
+| `AppPagination.test.tsx` | 5 | null при 1 странице, все страницы при ≤7, onChange вызывается с верным номером, active-класс, ellipsis при >7 |
+| `RecipeCard.test.tsx` | 6 | title, full author name, username fallback, difficulty badge (локализованный), «Нет оценок» при null rating, cooking_time |
+| `HomePage.test.tsx` | 5 | main heading, кнопка «Создать аккаунт» (un-auth), скрыта при auth (localStorage), секция демо-аккаунтов, ссылка на рецепты |
+
+**Инфраструктура тестов:**
+- `src/test/utils.tsx` — кастомный `render` с тремя провайдерами: `QueryClientProvider` (retry=false, gcTime=0) + `MemoryRouter` + `AuthProvider`. Используется для компонентов с хуками React Query / Auth.
+- `src/test/fixtures.ts` — `mockRecipe: RecipeList` с полным набором полей для переиспользования в тестах.
+
+### Принятые решения
+- **Кастомный render в `utils.tsx`** — все провайдеры в одном месте, тесты не дублируют обёртки; `createTestQueryClient` со `staleTime=0, retry=false` — быстрые тесты без real API.
+- **`vi.fn()` глобально** — `globals: true` в vite.config.ts покрывает `vi`, `describe`, `it`, `expect`, никаких импортов из vitest в тест-файлах.
+- **Тесты аутентификации через localStorage** — `AuthProvider` читает localStorage при монтировании; `beforeEach/afterEach localStorage.clear()` — полная изоляция между тестами.
+- **`StarRating`/`AppPagination` — без провайдеров** — чистые display-компоненты, тестируются с `@testing-library/react` напрямую.
+
+### Проблемы и решения
+- Нет. Все тесты корректны по структуре и не зависят от внешних запросов.
+
+### Следующий шаг
+- Фаза 16: Dockerization (Dockerfile backend, Dockerfile frontend, nginx, docker-compose, entrypoint: migrate → seed → collectstatic → gunicorn).
