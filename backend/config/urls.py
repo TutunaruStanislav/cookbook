@@ -25,10 +25,15 @@ urlpatterns = [
     path("api/", include("apps.social.urls")),
     path("api/", include("apps.planner.urls")),
     path("api/", include("apps.dashboard.urls")),
-    # OpenAPI
+    # OpenAPI schema
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    # Swagger / ReDoc — under /api/ and also at the root, so the docs are
+    # reachable at /docs, /redoc, /api-docs (common conventions).
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
     path("api/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
+    path("docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui-root"),
+    path("api-docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui-apidocs"),
+    path("redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc-root"),
 ]
 
 if settings.DEBUG:

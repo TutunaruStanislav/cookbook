@@ -30,8 +30,9 @@ cp .env.example .env            # опционально: задать свои 
 |---|---|
 | http://localhost:8888 | Фронтенд (React) |
 | http://localhost:8888/api/ | REST API |
-| http://localhost:8888/api/docs/ | Swagger UI (интерактивная документация) |
-| http://localhost:8888/api/redoc/ | ReDoc |
+| http://localhost:8888/docs | Swagger UI (также `/api-docs` и `/api/docs/`) |
+| http://localhost:8888/redoc | ReDoc (также `/api/redoc/`) |
+| http://localhost:8888/api/schema/ | OpenAPI-схема (YAML) |
 
 > Первый запуск занимает ~1–2 минуты: `db` стартует с healthcheck, затем backend запускает миграции и seed-данные.
 
