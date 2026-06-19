@@ -10,15 +10,18 @@ Full-stack веб-приложение для хранения, поиска и 
 
 ## Быстрый старт (Docker)
 
+Нужен только установленный Docker. Из чистого клона:
+
 ```bash
-git clone https://github.com/TutunaruStanislav/cookbook.git
-cd cookbook
+git clone https://github.com/TutunaruStanislav/cookbook.git && cd cookbook
+docker compose up
+```
 
-# Скопируйте и при необходимости отредактируйте переменные окружения
-cp .env.example .env
+Эта команда сама соберёт образы и поднимет всё (db → backend с миграциями и seed → frontend). Никакой настройки не требуется — все переменные окружения имеют значения по умолчанию.
 
-# Запустить всё одной командой (в фоновом режиме)
-docker compose up --build -d
+```bash
+docker compose up -d            # то же самое, но в фоне
+cp .env.example .env            # опционально: задать свои SECRET_KEY/порт/БД
 ```
 
 После запуска доступно:

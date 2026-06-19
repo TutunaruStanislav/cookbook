@@ -1,0 +1,8 @@
+# Normalize line endings so a fresh clone works on any OS.
+# Files consumed inside the Linux containers MUST stay LF — otherwise a CRLF
+# checkout (Windows default, core.autocrlf=true) breaks the shell entrypoint
+# (`#!/bin/sh\r` → "no such file or directory") and `docker compose up` fails.
+*.sh        text eol=lf
+entrypoint.sh text eol=lf
+Dockerfile  text eol=lf
+*.conf      text eol=lf
