@@ -171,3 +171,44 @@ def test_ordering_by_avg_rating_keeps_unrated_last(api_client, alice, bob, make_
     asc_titles = [r['title'] for r in asc.data['results']]
     assert asc_titles[0] == 'Low rated'     # lowest rated first
     assert asc_titles[-1] == 'Unrated'      # still last
+
+
+# ── Photo upload ────────────────────────────────────────────────────────────────
+
+def test_author_can_upload_photo(api_client, alice, make_recipe, settings, tmp_path):
+    """Uploading an image (multipart) sets the recipe photo."""
+    import io
+
+    from django.core.files.uploadedfile import SimpleUploadedFile
+    from PIL import Image
+
+    settings.MEDIA_ROOT = str(tmp_path)  # don't pollute the real media dir
+    recipe = make_recipe(alice)
+    assert not recipe.photo
+
+    buf = io.BytesIO()
+    Image.new('RGB', (10, 10), 'red').save(buf, 'PNG')
+    upload = SimpleUploadedFile('photo.png', buf.getvalue(), content_type='image/png')
+
+    api_client.force_authenticate(user=alice)
+    response = api_client.patch(
+        f'/api/recipes/{recipe.id}/', {'photo': upload}, format='multipart'
+    )
+    assert response.status_code == 200
+    assert response.data['photo']  # relative media URL string
+    recipe.refresh_from_db()
+    assert recipe.photo.name.startswith('recipes/')
+
+
+def test_upload_rejects_non_image(api_client, alice, make_recipe, settings, tmp_path):
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    settings.MEDIA_ROOT = str(tmp_path)
+    recipe = make_recipe(alice)
+    bogus = SimpleUploadedFile('note.txt', b'not an image', content_type='text/plain')
+
+    api_client.force_authenticate(user=alice)
+    response = api_client.patch(
+        f'/api/recipes/{recipe.id}/', {'photo': bogus}, format='multipart'
+    )
+    assert response.status_code == 400

@@ -16,7 +16,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useParams } from 'react-router-dom';
 import { z } from 'zod';
 import { useCategories, useIngredients, useRecipe, useTags } from '../hooks/useRecipes';
-import { useCreateRecipe, useUpdateRecipe } from '../hooks/useRecipes';
+import { useCreateRecipe, useUpdateRecipe, useUploadRecipePhoto } from '../hooks/useRecipes';
 import type { Ingredient } from '../types';
 import { UNIT_LABELS } from '../types';
 import { applyServerErrors } from '../utils/serverErrors';
@@ -139,8 +139,41 @@ export default function RecipeFormPage() {
 
   const createRecipe = useCreateRecipe();
   const updateRecipe = useUpdateRecipe(recipeId);
+  const uploadPhoto = useUploadRecipePhoto();
 
   const [serverError, setServerError] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+
+  // Show a local preview of the picked file (revoke the object URL on change).
+  useEffect(() => {
+    if (!photoFile) {
+      setPhotoPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(photoFile);
+    setPhotoPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [photoFile]);
+
+  const onPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        setPhotoError('Файл должен быть изображением.');
+        e.target.value = '';
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setPhotoError('Максимальный размер файла — 5 МБ.');
+        e.target.value = '';
+        return;
+      }
+    }
+    setPhotoError(null);
+    setPhotoFile(file);
+  };
 
   const {
     register,
@@ -235,6 +268,9 @@ export default function RecipeFormPage() {
       const result = isEdit
         ? await updateRecipe.mutateAsync(payload)
         : await createRecipe.mutateAsync(payload);
+      if (photoFile) {
+        await uploadPhoto.mutateAsync({ id: result.id, file: photoFile });
+      }
       navigate(`/recipes/${result.id}`);
     } catch (e: unknown) {
       setServerError(applyServerErrors(e, setError, RECIPE_SERVER_FIELDS));
@@ -439,8 +475,36 @@ export default function RecipeFormPage() {
             </Card>
           </Col>
 
-          {/* Right column: categories, tags */}
+          {/* Right column: photo, categories, tags */}
           <Col xs={12} lg={4}>
+            <Card className="border-0 shadow-sm mb-4">
+              <Card.Body className="p-4">
+                <h6 className="fw-semibold mb-3">Фото</h6>
+                {(photoPreview || existing?.photo) && (
+                  <img
+                    src={photoPreview ?? existing?.photo ?? undefined}
+                    alt="Превью рецепта"
+                    className="img-fluid rounded mb-3 w-100"
+                    style={{ maxHeight: 200, objectFit: 'cover' }}
+                  />
+                )}
+                <Form.Control
+                  type="file"
+                  accept="image/*"
+                  onChange={onPhotoChange}
+                  isInvalid={!!photoError}
+                  size="sm"
+                />
+                <Form.Control.Feedback type="invalid">{photoError}</Form.Control.Feedback>
+                <Form.Text className="text-muted">
+                  JPG/PNG, до 5 МБ.{' '}
+                  {isEdit && existing?.photo
+                    ? 'Загрузка заменит текущее фото.'
+                    : 'Необязательно.'}
+                </Form.Text>
+              </Card.Body>
+            </Card>
+
             <Card className="border-0 shadow-sm mb-4">
               <Card.Body className="p-4">
                 <h6 className="fw-semibold mb-3">Категории</h6>

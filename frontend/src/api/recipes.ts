@@ -42,6 +42,16 @@ export const recipesApi = {
   update: (id: number, data: Partial<RecipeWriteData>) =>
     api.patch<RecipeDetail>(`/recipes/${id}/`, data),
 
+  // Photo upload goes as multipart/form-data; Content-Type is unset so the
+  // browser adds the multipart boundary (the client default is JSON).
+  uploadPhoto: (id: number, file: File) => {
+    const form = new FormData();
+    form.append('photo', file);
+    return api.patch<RecipeDetail>(`/recipes/${id}/`, form, {
+      headers: { 'Content-Type': undefined },
+    });
+  },
+
   remove: (id: number) => api.delete(`/recipes/${id}/`),
 
   favorite: (id: number) =>

@@ -78,6 +78,18 @@ export function useUpdateRecipe(id: number) {
   });
 }
 
+export function useUploadRecipePhoto() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, file }: { id: number; file: File }) =>
+      recipesApi.uploadPhoto(id, file).then((r) => r.data),
+    onSuccess: (_data, { id }) => {
+      qc.invalidateQueries({ queryKey: [RECIPES_KEY] });
+      qc.invalidateQueries({ queryKey: [RECIPE_KEY, id] });
+    },
+  });
+}
+
 export function useDeleteRecipe() {
   const qc = useQueryClient();
   return useMutation({
