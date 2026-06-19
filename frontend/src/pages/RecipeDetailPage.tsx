@@ -126,9 +126,16 @@ export default function RecipeDetailPage() {
           {recipe.tags.length > 0 && (
             <div className="mt-2 d-flex flex-wrap gap-1">
               {recipe.tags.map((t) => (
-                <Badge key={t.id} bg="light" text="dark" className="border fw-normal">
-                  #{t.name}
-                </Badge>
+                <Link
+                  key={t.id}
+                  to={`/recipes?tag=${encodeURIComponent(t.slug)}`}
+                  className="text-decoration-none"
+                  title={`Рецепты с тегом «${t.name}»`}
+                >
+                  <Badge bg="light" text="dark" className="border fw-normal">
+                    #{t.name}
+                  </Badge>
+                </Link>
               ))}
             </div>
           )}

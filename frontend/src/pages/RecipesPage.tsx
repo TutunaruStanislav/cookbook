@@ -14,6 +14,8 @@ function filtersFromParams(params: URLSearchParams): RecipeFilters {
     search: params.get('search') ?? undefined,
     difficulty: (params.get('difficulty') as RecipeFilters['difficulty']) ?? undefined,
     category: params.get('category') ? Number(params.get('category')) : undefined,
+    tag: params.get('tag') ?? undefined,
+    ingredients: params.get('ingredients') ?? undefined,
     ordering: params.get('ordering') ?? undefined,
     favorites: params.get('favorites') === 'true' ? true : undefined,
     page: params.get('page') ? Number(params.get('page')) : 1,
@@ -25,6 +27,8 @@ function filtersToParams(f: RecipeFilters): Record<string, string> {
   if (f.search) p.search = f.search;
   if (f.difficulty) p.difficulty = f.difficulty;
   if (f.category) p.category = String(f.category);
+  if (f.tag) p.tag = f.tag;
+  if (f.ingredients) p.ingredients = f.ingredients;
   if (f.ordering) p.ordering = f.ordering;
   if (f.favorites) p.favorites = 'true';
   if (f.page && f.page > 1) p.page = String(f.page);
