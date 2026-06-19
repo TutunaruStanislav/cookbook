@@ -1,7 +1,14 @@
 from datetime import date
 
 from django.db.models import Max
-from rest_framework import permissions, status
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import (
+    OpenApiExample,
+    OpenApiParameter,
+    extend_schema,
+    inline_serializer,
+)
+from rest_framework import permissions, serializers, status
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -13,6 +20,33 @@ from .serializers import (
     MealSlotItemWriteSerializer,
     MealSlotSerializer,
     MenuPlanSerializer,
+)
+
+# Shared query parameter so Swagger renders an input for it (these are plain
+# APIViews, so drf-spectacular can't infer the query param on its own).
+WEEK_START_PARAM = OpenApiParameter(
+    name='week_start',
+    type=OpenApiTypes.DATE,
+    location=OpenApiParameter.QUERY,
+    required=True,
+    description='Понедельник недели в формате YYYY-MM-DD.',
+    examples=[OpenApiExample('Понедельник', value='2026-06-15')],
+)
+
+SHOPPING_ITEM_SCHEMA = inline_serializer(
+    name='ShoppingListItem',
+    fields={
+        'ingredient_id': serializers.IntegerField(),
+        'ingredient': serializers.CharField(),
+        'unit': serializers.CharField(),
+        'total_amount': serializers.FloatField(),
+    },
+    many=True,
+)
+
+MOVE_SLOT_ITEM_SCHEMA = inline_serializer(
+    name='MoveSlotItemRequest',
+    fields={'slot': serializers.IntegerField(help_text='ID целевого слота')},
 )
 
 
@@ -56,6 +90,7 @@ class MenuPlanView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
+    @extend_schema(parameters=[WEEK_START_PARAM], responses=MenuPlanSerializer)
     def get(self, request):
         week_start_str = request.query_params.get('week_start')
         if not week_start_str:
@@ -79,6 +114,7 @@ class MealSlotItemCreateView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
+    @extend_schema(request=MealSlotItemWriteSerializer, responses=MealSlotSerializer)
     def post(self, request, slot_id):
         slot = get_object_or_404(MealSlot, pk=slot_id, plan__user=request.user)
         serializer = MealSlotItemWriteSerializer(
@@ -111,11 +147,13 @@ class MealSlotItemView(APIView):
             MealSlotRecipe, pk=item_id, slot__plan__user=request.user
         )
 
+    @extend_schema(responses={204: None})
     def delete(self, request, item_id):
         item = self._get_item(request, item_id)
         item.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @extend_schema(request=MOVE_SLOT_ITEM_SCHEMA, responses=MealSlotSerializer)
     def patch(self, request, item_id):
         item = self._get_item(request, item_id)
         target_id = request.data.get('slot')
@@ -154,6 +192,7 @@ class ShoppingListView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
+    @extend_schema(parameters=[WEEK_START_PARAM], responses=SHOPPING_ITEM_SCHEMA)
     def get(self, request):
         week_start_str = request.query_params.get('week_start')
         if not week_start_str:
