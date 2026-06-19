@@ -26,7 +26,9 @@ export default function RecipeCard({ recipe }: Props) {
       : recipe.author.username;
 
   const handleFav = (e: React.MouseEvent) => {
+    // Stop the card's stretched-link from hijacking the click → navigating away.
     e.preventDefault();
+    e.stopPropagation();
     favToggle.mutate(recipe.id);
   };
 
@@ -58,11 +60,22 @@ export default function RecipeCard({ recipe }: Props) {
           <Button
             variant="link"
             size="sm"
-            className="position-absolute top-0 start-0 p-1"
+            className="position-absolute top-0 start-0 m-2 p-0 d-flex align-items-center justify-content-center"
             onClick={handleFav}
             disabled={favToggle.isPending}
             title={recipe.is_favorited ? 'Убрать из избранного' : 'В избранное'}
-            style={{ color: recipe.is_favorited ? '#dc3545' : '#adb5bd', fontSize: '1.3rem' }}
+            style={{
+              zIndex: 2, // above the title's stretched-link overlay so the click lands here
+              width: 34,
+              height: 34,
+              borderRadius: '50%',
+              backgroundColor: 'rgba(255,255,255,0.85)',
+              boxShadow: '0 1px 3px rgba(0,0,0,.2)',
+              color: recipe.is_favorited ? '#dc3545' : '#6c757d',
+              fontSize: '1.2rem',
+              lineHeight: 1,
+              textDecoration: 'none',
+            }}
           >
             {recipe.is_favorited ? '♥' : '♡'}
           </Button>
