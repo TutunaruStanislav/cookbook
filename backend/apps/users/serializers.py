@@ -1,9 +1,15 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
+from apps.common.validators import no_html
+
+_name_field = dict(required=False, allow_blank=True, max_length=150, validators=[no_html])
+
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
+    first_name = serializers.CharField(**_name_field)
+    last_name = serializers.CharField(**_name_field)
 
     class Meta:
         model = User
@@ -14,6 +20,9 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(**_name_field)
+    last_name = serializers.CharField(**_name_field)
+
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name']

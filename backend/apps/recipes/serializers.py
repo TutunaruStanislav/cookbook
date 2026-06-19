@@ -3,6 +3,8 @@ from decimal import ROUND_HALF_UP, Decimal
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
+from apps.common.validators import no_html
+
 from .models import Category, Ingredient, Recipe, RecipeIngredient, RecipeStep, Tag
 
 
@@ -31,6 +33,8 @@ class AuthorSerializer(serializers.ModelSerializer):
 
 
 class RecipeStepSerializer(serializers.ModelSerializer):
+    text = serializers.CharField(validators=[no_html])
+
     class Meta:
         model = RecipeStep
         fields = ['id', 'order', 'text']
@@ -54,6 +58,10 @@ class RecipeIngredientReadSerializer(serializers.ModelSerializer):
 
 
 class RecipeIngredientWriteSerializer(serializers.ModelSerializer):
+    amount = serializers.DecimalField(
+        max_digits=10, decimal_places=2, min_value=Decimal('0.01')
+    )
+
     class Meta:
         model = RecipeIngredient
         fields = ['ingredient', 'amount', 'unit']
@@ -131,6 +139,10 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
 
 
 class RecipeWriteSerializer(serializers.ModelSerializer):
+    title = serializers.CharField(min_length=3, max_length=255, validators=[no_html])
+    description = serializers.CharField(min_length=10, validators=[no_html])
+    cooking_time = serializers.IntegerField(min_value=1, max_value=100000)
+    servings = serializers.IntegerField(min_value=1, max_value=1000)
     ingredients = RecipeIngredientWriteSerializer(
         many=True, source='recipe_ingredients', required=False
     )
