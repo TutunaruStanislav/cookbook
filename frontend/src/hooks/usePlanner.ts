@@ -12,15 +12,37 @@ export function usePlan(weekStart: string) {
   });
 }
 
-export function useUpdateSlot(weekStart: string) {
+function usePlannerInvalidate(weekStart: string) {
   const qc = useQueryClient();
+  return () => {
+    qc.invalidateQueries({ queryKey: [PLAN_KEY, weekStart] });
+    qc.invalidateQueries({ queryKey: [SHOPPING_KEY, weekStart] });
+  };
+}
+
+export function useAddSlotItem(weekStart: string) {
+  const invalidate = usePlannerInvalidate(weekStart);
   return useMutation({
-    mutationFn: ({ slotId, recipeId }: { slotId: number; recipeId: number | null }) =>
-      plannerApi.updateSlot(slotId, recipeId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [PLAN_KEY, weekStart] });
-      qc.invalidateQueries({ queryKey: [SHOPPING_KEY, weekStart] });
-    },
+    mutationFn: ({ slotId, recipeId }: { slotId: number; recipeId: number }) =>
+      plannerApi.addSlotItem(slotId, recipeId),
+    onSuccess: invalidate,
+  });
+}
+
+export function useMoveSlotItem(weekStart: string) {
+  const invalidate = usePlannerInvalidate(weekStart);
+  return useMutation({
+    mutationFn: ({ itemId, targetSlotId }: { itemId: number; targetSlotId: number }) =>
+      plannerApi.moveSlotItem(itemId, targetSlotId),
+    onSuccess: invalidate,
+  });
+}
+
+export function useRemoveSlotItem(weekStart: string) {
+  const invalidate = usePlannerInvalidate(weekStart);
+  return useMutation({
+    mutationFn: (itemId: number) => plannerApi.removeSlotItem(itemId),
+    onSuccess: invalidate,
   });
 }
 

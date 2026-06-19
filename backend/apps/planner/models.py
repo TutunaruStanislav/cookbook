@@ -41,13 +41,6 @@ class MealSlot(models.Model):
     plan = models.ForeignKey(MenuPlan, on_delete=models.CASCADE, related_name='slots')
     day = models.PositiveSmallIntegerField(choices=DAY_CHOICES)
     meal_type = models.CharField(max_length=10, choices=MEAL_CHOICES)
-    recipe = models.ForeignKey(
-        Recipe,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='meal_slots',
-    )
 
     class Meta:
         verbose_name = 'Слот приёма пищи'
@@ -57,3 +50,25 @@ class MealSlot(models.Model):
 
     def __str__(self):
         return f'{self.plan} — {self.get_day_display()} {self.get_meal_type_display()}'
+
+
+class MealSlotRecipe(models.Model):
+    """A single dish placed in a slot. A slot holds up to MAX_PER_SLOT dishes."""
+
+    MAX_PER_SLOT = 3
+
+    slot = models.ForeignKey(MealSlot, on_delete=models.CASCADE, related_name='items')
+    recipe = models.ForeignKey(
+        Recipe, on_delete=models.CASCADE, related_name='meal_slot_items'
+    )
+    position = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        verbose_name = 'Блюдо в слоте'
+        verbose_name_plural = 'Блюда в слотах'
+        ordering = ['position', 'id']
+        # No duplicate dish in one slot; stable display order per slot.
+        unique_together = [('slot', 'recipe'), ('slot', 'position')]
+
+    def __str__(self):
+        return f'{self.slot} — {self.recipe.title}'

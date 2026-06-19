@@ -117,11 +117,31 @@ export const MEAL_TYPE_LABELS: Record<MealType, string> = {
 
 export const DAY_LABELS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 
+// Compact recipe shape returned inside a planner slot (`recipe_detail`).
+export interface SlotRecipe {
+  id: number;
+  title: string;
+  photo: string | null;
+  cooking_time: number;
+  difficulty: Difficulty;
+  author_name: string;
+}
+
+// A single dish placed in a slot. A slot holds up to MAX_DISHES_PER_SLOT items.
+export interface SlotItem {
+  id: number;
+  recipe: number;
+  recipe_detail: SlotRecipe;
+  position: number;
+}
+
+export const MAX_DISHES_PER_SLOT = 3;
+
 export interface MealSlot {
   id: number;
   day: number;
   meal_type: MealType;
-  recipe: RecipeList | null;
+  items: SlotItem[];
 }
 
 export interface MenuPlan {

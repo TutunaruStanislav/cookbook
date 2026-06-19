@@ -718,6 +718,10 @@ MENU_PLAN_DATA = [
     (6, 'breakfast', 'Сырники со сметаной'),
     (6, 'lunch',     'Запечённые овощи'),
     (6, 'dinner',    'Яблочный пирог'),
+    # Демонстрация нескольких блюд в одном слоте (до 3):
+    (0, 'breakfast', 'Сырники со сметаной'),
+    (0, 'breakfast', 'Блины классические'),
+    (0, 'lunch',     'Греческий салат'),
 ]
 
 
@@ -934,7 +938,7 @@ class Command(BaseCommand):
         )
 
     def _create_menu_plan(self, alice, recipes):
-        from apps.planner.models import MealSlot, MenuPlan
+        from apps.planner.models import MealSlot, MealSlotRecipe, MenuPlan
 
         today = date.today()
         monday = today - timedelta(days=today.weekday())
@@ -950,9 +954,13 @@ class Command(BaseCommand):
 
         for day, meal_type, recipe_title in MENU_PLAN_DATA:
             recipe = recipes.get(recipe_title)
-            if recipe:
-                MealSlot.objects.filter(
-                    plan=plan, day=day, meal_type=meal_type
-                ).update(recipe=recipe)
+            if not recipe:
+                continue
+            slot = MealSlot.objects.filter(plan=plan, day=day, meal_type=meal_type).first()
+            if not slot or slot.items.count() >= MealSlotRecipe.MAX_PER_SLOT:
+                continue
+            MealSlotRecipe.objects.get_or_create(
+                slot=slot, recipe=recipe, defaults={'position': slot.items.count()}
+            )
 
-        self.stdout.write(f'  Menu plan: week of {monday}, {len(MENU_PLAN_DATA)} slots filled')
+        self.stdout.write(f'  Menu plan: week of {monday}, {len(MENU_PLAN_DATA)} dishes placed')

@@ -10,10 +10,17 @@ import {
   useSensors,
 } from '@dnd-kit/core';
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
+import { Link } from 'react-router-dom';
 import RecipePickerModal from '../components/RecipePickerModal';
-import { usePlan, useShoppingList, useUpdateSlot } from '../hooks/usePlanner';
-import type { MealSlot, MealType, RecipeList } from '../types';
-import { DAY_LABELS, MEAL_TYPE_LABELS, UNIT_LABELS } from '../types';
+import {
+  useAddSlotItem,
+  useMoveSlotItem,
+  usePlan,
+  useRemoveSlotItem,
+  useShoppingList,
+} from '../hooks/usePlanner';
+import type { MealSlot, MealType, RecipeList, SlotItem } from '../types';
+import { DAY_LABELS, DIFFICULTY_LABELS, MAX_DISHES_PER_SLOT, MEAL_TYPE_LABELS, UNIT_LABELS } from '../types';
 
 // ── Week helpers ──────────────────────────────────────────────────────────────
 
@@ -41,18 +48,23 @@ function formatWeekRange(weekStart: string): string {
   return `${start.toLocaleDateString('ru-RU', opts)} – ${end.toLocaleDateString('ru-RU', { ...opts, year: 'numeric' })}`;
 }
 
-// ── Draggable recipe chip ─────────────────────────────────────────────────────
-
 const MEAL_TYPES: MealType[] = ['breakfast', 'lunch', 'dinner'];
 
+// DnD ids are namespaced so draggable dishes never collide with droppable slots.
+const itemDragId = (itemId: number) => `item-${itemId}`;
+const slotDropId = (slotId: number) => `slot-${slotId}`;
+const parseId = (id: string) => Number(id.slice(5));
+
+// ── Draggable dish chip ───────────────────────────────────────────────────────
+
 interface ChipProps {
-  slot: MealSlot;
-  onClear: () => void;
-  onPick: () => void;
+  item: SlotItem;
+  onRemove: () => void;
 }
 
-function RecipeChip({ slot, onClear, onPick }: ChipProps) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: slot.id });
+function RecipeChip({ item, onRemove }: ChipProps) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: itemDragId(item.id) });
+  const recipe = item.recipe_detail;
 
   return (
     <div
@@ -70,41 +82,41 @@ function RecipeChip({ slot, onClear, onPick }: ChipProps) {
         >
           ⠿
         </span>
-        <small
-          className="flex-grow-1 text-break"
-          style={{ lineHeight: 1.25, cursor: 'pointer' }}
-          onClick={onPick}
-          title="Изменить рецепт"
+        <Link
+          to={`/recipes/${item.recipe}`}
+          className="flex-grow-1 text-break fw-semibold text-decoration-none text-dark"
+          style={{ lineHeight: 1.2, fontSize: '0.8rem' }}
+          title={`${recipe.title} — открыть рецепт`}
         >
-          {slot.recipe!.title}
-        </small>
+          {recipe.title}
+        </Link>
         <span
           className="text-danger"
           style={{ cursor: 'pointer', fontSize: '1rem', lineHeight: 1, userSelect: 'none' }}
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={onClear}
-          title="Убрать"
+          onClick={onRemove}
+          title="Убрать блюдо"
         >
           ×
         </span>
       </div>
       <small className="text-muted d-block mt-1" style={{ fontSize: '0.65rem' }}>
-        {slot.recipe!.cooking_time} мин
+        {DIFFICULTY_LABELS[recipe.difficulty]} · {recipe.cooking_time} мин
       </small>
     </div>
   );
 }
 
-// ── Droppable slot cell ───────────────────────────────────────────────────────
+// ── Droppable slot cell (holds up to 3 dishes) ──────────────────────────────────
 
 interface CellProps {
   slot: MealSlot;
   onPick: (slotId: number) => void;
-  onClear: (slotId: number) => void;
+  onRemove: (itemId: number) => void;
 }
 
-function SlotCell({ slot, onPick, onClear }: CellProps) {
-  const { setNodeRef, isOver } = useDroppable({ id: slot.id });
+function SlotCell({ slot, onPick, onRemove }: CellProps) {
+  const { setNodeRef, isOver } = useDroppable({ id: slotDropId(slot.id) });
+  const full = slot.items.length >= MAX_DISHES_PER_SLOT;
 
   return (
     <td
@@ -117,28 +129,43 @@ function SlotCell({ slot, onPick, onClear }: CellProps) {
         transition: 'background 0.12s',
       }}
     >
-      {slot.recipe ? (
-        <RecipeChip
-          slot={slot}
-          onClear={() => onClear(slot.id)}
-          onPick={() => onPick(slot.id)}
-        />
-      ) : (
-        <button
-          className="btn w-100"
-          style={{
-            minHeight: 72,
-            border: `1.5px dashed ${isOver ? '#0d6efd' : '#ced4da'}`,
-            background: 'transparent',
-            color: '#adb5bd',
-            fontSize: '1.4rem',
-          }}
-          onClick={() => onPick(slot.id)}
-          title="Добавить рецепт"
-        >
-          +
-        </button>
-      )}
+      <div className="d-flex flex-column gap-1">
+        {slot.items.map((item) => (
+          <RecipeChip key={item.id} item={item} onRemove={() => onRemove(item.id)} />
+        ))}
+
+        {!full &&
+          (slot.items.length === 0 ? (
+            <button
+              className="btn w-100"
+              style={{
+                minHeight: 72,
+                border: `1.5px dashed ${isOver ? '#0d6efd' : '#ced4da'}`,
+                background: 'transparent',
+                color: '#adb5bd',
+                fontSize: '1.4rem',
+              }}
+              onClick={() => onPick(slot.id)}
+              title="Добавить блюдо"
+            >
+              +
+            </button>
+          ) : (
+            <button
+              className="btn btn-sm w-100 text-muted"
+              style={{
+                border: '1px dashed #ced4da',
+                background: 'transparent',
+                fontSize: '0.72rem',
+                padding: '2px 4px',
+              }}
+              onClick={() => onPick(slot.id)}
+              title="Добавить блюдо"
+            >
+              + блюдо
+            </button>
+          ))}
+      </div>
     </td>
   );
 }
@@ -149,46 +176,57 @@ export default function PlannerPage() {
   const today = getThisMonday();
   const [weekStart, setWeekStart] = useState(today);
   const [pickerSlotId, setPickerSlotId] = useState<number | null>(null);
-  const [activeSlotId, setActiveSlotId] = useState<number | null>(null);
+  const [activeItemId, setActiveItemId] = useState<number | null>(null);
   const [showShopping, setShowShopping] = useState(false);
 
   const { data: plan, isLoading, isError } = usePlan(weekStart);
   const { data: shopping, isLoading: loadingShopping } = useShoppingList(weekStart, showShopping);
-  const updateSlot = useUpdateSlot(weekStart);
+  const addItem = useAddSlotItem(weekStart);
+  const moveItem = useMoveSlotItem(weekStart);
+  const removeItem = useRemoveSlotItem(weekStart);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   );
 
-  const activeSlot = plan?.slots.find((s) => s.id === activeSlotId);
+  // Flat index of every dish across the plan (for drag lookups + overlay).
+  const allItems = plan
+    ? plan.slots.flatMap((s) => s.items.map((item) => ({ item, slotId: s.id })))
+    : [];
+  const activeEntry = allItems.find((e) => e.item.id === activeItemId);
 
   const handlePickerSelect = async (recipe: RecipeList) => {
     if (pickerSlotId === null) return;
+    const slotId = pickerSlotId;
     setPickerSlotId(null);
-    await updateSlot.mutateAsync({ slotId: pickerSlotId, recipeId: recipe.id });
+    await addItem.mutateAsync({ slotId, recipeId: recipe.id });
   };
 
-  const handleClear = async (slotId: number) => {
-    await updateSlot.mutateAsync({ slotId, recipeId: null });
+  const handleRemove = async (itemId: number) => {
+    await removeItem.mutateAsync(itemId);
   };
 
   const handleDragStart = (event: DragStartEvent) => {
-    setActiveSlotId(event.active.id as number);
+    setActiveItemId(parseId(String(event.active.id)));
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
-    setActiveSlotId(null);
-    if (!over || !plan || active.id === over.id) return;
+    setActiveItemId(null);
+    if (!over || !plan) return;
 
-    const srcId = active.id as number;
-    const dstId = over.id as number;
-    const srcSlot = plan.slots.find((s) => s.id === srcId);
-    const dstSlot = plan.slots.find((s) => s.id === dstId);
-    if (!srcSlot?.recipe) return;
+    const itemId = parseId(String(active.id));
+    const targetSlotId = parseId(String(over.id));
+    const entry = allItems.find((e) => e.item.id === itemId);
+    if (!entry || entry.slotId === targetSlotId) return;
 
-    await updateSlot.mutateAsync({ slotId: dstId, recipeId: srcSlot.recipe.id });
-    await updateSlot.mutateAsync({ slotId: srcId, recipeId: dstSlot?.recipe?.id ?? null });
+    const target = plan.slots.find((s) => s.id === targetSlotId);
+    if (!target) return;
+    // Mirror backend rules so a doomed move never even fires.
+    if (target.items.length >= MAX_DISHES_PER_SLOT) return;
+    if (target.items.some((it) => it.recipe === entry.item.recipe)) return;
+
+    await moveItem.mutateAsync({ itemId, targetSlotId });
   };
 
   return (
@@ -223,6 +261,11 @@ export default function PlannerPage() {
           </Button>
         )}
       </div>
+
+      <p className="text-muted small mb-3">
+        В один слот можно добавить до {MAX_DISHES_PER_SLOT} блюд. Перетащите блюдо за значок «⠿»,
+        чтобы перенести его в другой слот.
+      </p>
 
       {/* Grid */}
       {isLoading && (
@@ -281,7 +324,7 @@ export default function PlannerPage() {
                           key={day}
                           slot={slot}
                           onPick={setPickerSlotId}
-                          onClear={handleClear}
+                          onRemove={handleRemove}
                         />
                       );
                     })}
@@ -292,14 +335,14 @@ export default function PlannerPage() {
           </div>
 
           <DragOverlay dropAnimation={null}>
-            {activeSlot?.recipe && (
+            {activeEntry && (
               <div
                 className="rounded border bg-white px-2 py-1 shadow"
                 style={{ width: 140, opacity: 0.92 }}
               >
-                <small className="fw-semibold d-block">{activeSlot.recipe.title}</small>
+                <small className="fw-semibold d-block">{activeEntry.item.recipe_detail.title}</small>
                 <small className="text-muted" style={{ fontSize: '0.65rem' }}>
-                  {activeSlot.recipe.cooking_time} мин
+                  {activeEntry.item.recipe_detail.cooking_time} мин
                 </small>
               </div>
             )}

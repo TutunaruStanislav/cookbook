@@ -3,6 +3,7 @@ import type {
   Comment,
   DashboardStats,
   Ingredient,
+  MealSlot,
   MenuPlan,
   PaginatedResponse,
   RecipeDetail,
@@ -75,8 +76,13 @@ export const catalogApi = {
 export const plannerApi = {
   plan: (weekStart: string) => api.get<MenuPlan>('/menu-plan/', { params: { week_start: weekStart } }),
 
-  updateSlot: (slotId: number, recipeId: number | null) =>
-    api.patch(`/menu-plan/slots/${slotId}/`, { recipe: recipeId }),
+  addSlotItem: (slotId: number, recipeId: number) =>
+    api.post<MealSlot>(`/menu-plan/slots/${slotId}/items/`, { recipe: recipeId }),
+
+  moveSlotItem: (itemId: number, targetSlotId: number) =>
+    api.patch<MealSlot>(`/menu-plan/items/${itemId}/`, { slot: targetSlotId }),
+
+  removeSlotItem: (itemId: number) => api.delete(`/menu-plan/items/${itemId}/`),
 
   shoppingList: (weekStart: string) =>
     api.get<ShoppingItem[]>('/menu-plan/shopping-list/', { params: { week_start: weekStart } }),
