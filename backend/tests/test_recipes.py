@@ -144,3 +144,30 @@ def test_retrieve_without_scaling_returns_original_amount(api_client, alice, mak
     assert response.status_code == 200
     scaled = response.data['ingredients'][0]['scaled_amount']
     assert abs(scaled - 50.0) < 0.01
+
+
+# ── Ordering by average rating ──────────────────────────────────────────────────
+
+def test_ordering_by_avg_rating_keeps_unrated_last(api_client, alice, bob, make_recipe):
+    """Sorting by rating must never float unrated recipes (avg IS NULL) to the
+    top — they belong at the bottom in both directions."""
+    from apps.social.models import Rating
+
+    high = make_recipe(alice, title='High rated')
+    low = make_recipe(alice, title='Low rated')
+    make_recipe(alice, title='Unrated')
+
+    Rating.objects.create(user=alice, recipe=high, value=5)
+    Rating.objects.create(user=bob, recipe=high, value=5)
+    Rating.objects.create(user=alice, recipe=low, value=2)
+
+    desc = api_client.get('/api/recipes/?ordering=-avg_rating')
+    desc_titles = [r['title'] for r in desc.data['results']]
+    assert desc_titles[0] == 'High rated'   # best first, not an unrated one
+    assert desc_titles[-1] == 'Unrated'     # unrated dead last
+    assert desc_titles.index('High rated') < desc_titles.index('Low rated')
+
+    asc = api_client.get('/api/recipes/?ordering=avg_rating')
+    asc_titles = [r['title'] for r in asc.data['results']]
+    assert asc_titles[0] == 'Low rated'     # lowest rated first
+    assert asc_titles[-1] == 'Unrated'      # still last

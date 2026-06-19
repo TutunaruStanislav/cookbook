@@ -1,4 +1,4 @@
-from django.db.models import Avg, BooleanField, Count, Exists, OuterRef, Q, Value
+from django.db.models import Avg, BooleanField, Count, Exists, F, OuterRef, Q, Value
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, viewsets
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
@@ -15,6 +15,28 @@ from .serializers import (
     RecipeWriteSerializer,
     TagSerializer,
 )
+
+
+class NullsLastOrderingFilter(filters.OrderingFilter):
+    """OrderingFilter that always puts NULLs last, in both directions.
+
+    Without this, PostgreSQL sorts NULLs FIRST on DESC, so unrated recipes
+    (avg_rating IS NULL) float to the top of `ordering=-avg_rating` instead of
+    the highest-rated ones. A stable id tiebreaker keeps pagination
+    deterministic when several recipes share the same average.
+    """
+
+    def filter_queryset(self, request, queryset, view):
+        ordering = self.get_ordering(request, queryset, view)
+        if not ordering:
+            return queryset
+        order_by = []
+        for term in ordering:
+            field = term[1:] if term.startswith('-') else term
+            expr = F(field).desc(nulls_last=True) if term.startswith('-') else F(field).asc(nulls_last=True)
+            order_by.append(expr)
+        order_by.append(F('id').desc())
+        return queryset.order_by(*order_by)
 
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
@@ -40,7 +62,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, NullsLastOrderingFilter]
     filterset_class = RecipeFilter
     search_fields = ['title', 'description']
     ordering_fields = ['created_at', 'cooking_time', 'avg_rating']
