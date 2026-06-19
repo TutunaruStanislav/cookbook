@@ -99,7 +99,7 @@ export default function RecipeFiltersBar({ filters, onChange, onReset }: Props) 
           <Form.Check
             type="switch"
             id="fav-switch"
-            label="Моё"
+            label="Избранное"
             checked={!!filters.favorites}
             onChange={(e) => set({ favorites: e.target.checked || undefined })}
           />

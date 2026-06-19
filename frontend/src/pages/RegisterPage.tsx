@@ -6,6 +6,9 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { authApi } from '../api/auth';
 import { useAuth } from '../contexts/AuthContext';
+import { applyServerErrors } from '../utils/serverErrors';
+
+const SERVER_FIELDS = ['username', 'email', 'password', 'first_name', 'last_name'] as const;
 
 const schema = z
   .object({
@@ -35,6 +38,7 @@ export default function RegisterPage() {
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({ resolver: zodResolver(schema) });
 
@@ -55,13 +59,7 @@ export default function RegisterPage() {
       await login(data.username, data.password);
       navigate('/', { replace: true });
     } catch (err: unknown) {
-      const detail = (err as { response?: { data?: Record<string, string[]> } })?.response?.data;
-      if (detail) {
-        const messages = Object.values(detail).flat().join(' ');
-        setServerError(messages);
-      } else {
-        setServerError('Ошибка при регистрации. Попробуйте ещё раз.');
-      }
+      setServerError(applyServerErrors(err, setError, SERVER_FIELDS));
     }
   };
 

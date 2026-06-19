@@ -35,11 +35,6 @@ describe('HomePage', () => {
     expect(screen.queryByText('Создать аккаунт')).not.toBeInTheDocument();
   });
 
-  it('shows demo accounts section', () => {
-    render(<HomePage />);
-    expect(screen.getByText('Демо-аккаунты')).toBeInTheDocument();
-  });
-
   it('shows link to recipes page', () => {
     render(<HomePage />);
     expect(screen.getAllByText('Смотреть рецепты').length).toBeGreaterThan(0);

@@ -9,6 +9,7 @@ import AppPagination from '../components/AppPagination';
 import RecipeCard from '../components/RecipeCard';
 import { useAuth } from '../contexts/AuthContext';
 import { useRecipes } from '../hooks/useRecipes';
+import { applyServerErrors } from '../utils/serverErrors';
 
 const PAGE_SIZE = 12;
 
@@ -30,18 +31,6 @@ const passwordSchema = z
   });
 type PasswordForm = z.infer<typeof passwordSchema>;
 
-function extractError(err: unknown, fallback: string): string {
-  const data = (err as { response?: { data?: Record<string, unknown> } })?.response?.data;
-  if (data) {
-    if (typeof data.detail === 'string') return data.detail;
-    const messages = Object.values(data)
-      .flat()
-      .filter((m): m is string => typeof m === 'string');
-    if (messages.length) return messages.join(' ');
-  }
-  return fallback;
-}
-
 function DisplayNameSection() {
   const { user, updateUser } = useAuth();
   const [done, setDone] = useState(false);
@@ -50,6 +39,7 @@ function DisplayNameSection() {
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<NameForm>({
     resolver: zodResolver(nameSchema),
@@ -64,7 +54,7 @@ function DisplayNameSection() {
       updateUser(updated);
       setDone(true);
     } catch (err: unknown) {
-      setServerError(extractError(err, 'Не удалось сохранить изменения.'));
+      setServerError(applyServerErrors(err, setError, ['first_name', 'last_name']));
     }
   };
 
@@ -126,6 +116,7 @@ function ChangePasswordSection() {
     register,
     handleSubmit,
     reset,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<PasswordForm>({ resolver: zodResolver(passwordSchema) });
 
@@ -137,7 +128,7 @@ function ChangePasswordSection() {
       reset({ current_password: '', new_password: '', confirm: '' });
       setDone(true);
     } catch (err: unknown) {
-      setServerError(extractError(err, 'Не удалось сменить пароль.'));
+      setServerError(applyServerErrors(err, setError, ['current_password', 'new_password']));
     }
   };
 

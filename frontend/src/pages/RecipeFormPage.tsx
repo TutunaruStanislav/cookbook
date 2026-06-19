@@ -19,6 +19,16 @@ import { useCategories, useIngredients, useRecipe, useTags } from '../hooks/useR
 import { useCreateRecipe, useUpdateRecipe } from '../hooks/useRecipes';
 import type { Ingredient } from '../types';
 import { UNIT_LABELS } from '../types';
+import { applyServerErrors } from '../utils/serverErrors';
+
+// Scalar fields whose server-side errors map directly onto form inputs.
+const RECIPE_SERVER_FIELDS = [
+  'title',
+  'description',
+  'cooking_time',
+  'servings',
+  'difficulty',
+] as const;
 
 // ── Zod schema ────────────────────────────────────────────────────────────────
 
@@ -139,6 +149,7 @@ export default function RecipeFormPage() {
     reset,
     watch,
     setValue,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -226,13 +237,7 @@ export default function RecipeFormPage() {
         : await createRecipe.mutateAsync(payload);
       navigate(`/recipes/${result.id}`);
     } catch (e: unknown) {
-      const detail = (e as { response?: { data?: Record<string, string[]> } })?.response?.data;
-      if (detail) {
-        const messages = Object.values(detail).flat().join(' ');
-        setServerError(messages);
-      } else {
-        setServerError('Не удалось сохранить рецепт. Попробуйте ещё раз.');
-      }
+      setServerError(applyServerErrors(e, setError, RECIPE_SERVER_FIELDS));
     }
   };
 
@@ -353,6 +358,9 @@ export default function RecipeFormPage() {
                         placeholder="Кол-во"
                         isInvalid={!!errors.ingredients?.[i]?.amount}
                       />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.ingredients?.[i]?.amount?.message}
+                      </Form.Control.Feedback>
                     </Col>
                     <Col xs={3}>
                       <Form.Select {...register(`ingredients.${i}.unit`)} size="sm">
@@ -396,14 +404,18 @@ export default function RecipeFormPage() {
                     <span className="mt-2 text-muted fw-semibold" style={{ minWidth: 24 }}>
                       {i + 1}.
                     </span>
-                    <Form.Control
-                      {...register(`steps.${i}.text`)}
-                      as="textarea"
-                      rows={2}
-                      placeholder={`Шаг ${i + 1}...`}
-                      isInvalid={!!errors.steps?.[i]?.text}
-                      className="flex-grow-1"
-                    />
+                    <div className="flex-grow-1">
+                      <Form.Control
+                        {...register(`steps.${i}.text`)}
+                        as="textarea"
+                        rows={2}
+                        placeholder={`Шаг ${i + 1}...`}
+                        isInvalid={!!errors.steps?.[i]?.text}
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.steps?.[i]?.text?.message}
+                      </Form.Control.Feedback>
+                    </div>
                     <Button
                       variant="outline-danger"
                       size="sm"

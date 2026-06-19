@@ -74,19 +74,6 @@ export default function HomePage() {
         </Row>
       </Container>
 
-      {/* Seed accounts hint */}
-      <Container className="pb-5">
-        <div className="bg-light rounded-3 p-4 text-center">
-          <h5 className="mb-2">Демо-аккаунты</h5>
-          <p className="text-muted mb-1">
-            <code>alice</code> / <code>alice1234</code> &nbsp;&nbsp;
-            <code>bob</code> / <code>bob1234</code>
-          </p>
-          <small className="text-secondary">
-            Уже заполнено 28 рецептами, планом меню и комментариями.
-          </small>
-        </div>
-      </Container>
     </>
   );
 }
