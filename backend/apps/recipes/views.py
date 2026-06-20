@@ -70,6 +70,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         from apps.social.models import Favorite  # lazy import — social depends on recipes
+
         user = self.request.user
         qs = (
             Recipe.objects.select_related('author')
