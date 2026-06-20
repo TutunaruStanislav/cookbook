@@ -758,9 +758,9 @@ class Command(BaseCommand):
     # ── helpers ──────────────────────────────────────────────────────────────
 
     def _reset(self):
-        from apps.social.models import Comment, Favorite, Rating
         from apps.planner.models import MenuPlan
-        from apps.recipes.models import Recipe, Category, Tag, Ingredient
+        from apps.recipes.models import Category, Ingredient, Recipe, Tag
+        from apps.social.models import Comment, Favorite, Rating
         Comment.objects.all().delete()
         Rating.objects.all().delete()
         Favorite.objects.all().delete()

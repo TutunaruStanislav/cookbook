@@ -35,7 +35,6 @@ def test_favorite_requires_auth(api_client, alice, make_recipe):
 
 def test_favorites_filter(api_client, alice, bob, make_recipe):
     fav_recipe = make_recipe(alice, title='Favourite One')
-    other_recipe = make_recipe(alice, title='Not Favourite')
     Favorite.objects.create(user=bob, recipe=fav_recipe)
     api_client.force_authenticate(user=bob)
     response = api_client.get('/api/recipes/?favorites=true')

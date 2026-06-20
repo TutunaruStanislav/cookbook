@@ -1,8 +1,7 @@
 """Tests for the dashboard stats endpoint."""
 import pytest
 
-from apps.recipes.models import Category, Ingredient, Recipe
-from apps.social.models import Comment, Favorite, Rating
+from apps.social.models import Favorite, Rating
 
 pytestmark = pytest.mark.django_db
 
