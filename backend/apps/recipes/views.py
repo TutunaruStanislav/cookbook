@@ -69,7 +69,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     ordering = ['-created_at']
 
     def get_queryset(self):
-        from apps.social.models import Favorite  # lazy import — social depends on recipes
+        # lazy import — social depends on recipes
+        from apps.social.models import Favorite
         user = self.request.user
         qs = (
             Recipe.objects.select_related('author')
